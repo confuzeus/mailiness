@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mailiness"
+dynamic = ["version"]
+description = "Manage your mail server at the command line."
+readme = "README.md"
+requires-python = "<3.10"
+license = "MIT"
+authors = [
+  {name="Michael Karamuth", email="michael@confuzeus.com"}
+]
+keywords = [
+  "mail server",
+]
+classifiers = [
+  "Development Status :: 1 - Planning",
+  "License :: OSI Approved :: MIT License",
+]
+dependencies = [
+  "cryptography>=37,<38"
+]
+
+[project.optional-dependencies]
+dev = [
+  "Sphinx",
+  "black",
+  "flake8",
+  "isort",
+  "hatch",
+  "pip-tools"
+]
+
+[project.scripts]
+mailiness = "mailiness.cli:main"
+
+[project.urls]
+"Homepage" = "https://github.com/confuzeus/simple-pypackage"
+"Bug Tracker" = "https://github.com/confuzeus/simple-pypackage/issues"
+
+[tool.hatch.version]
+path = "src/mailiness/__init__.py"
+
+[tool.hatch.build]
+packages = [
+  "src/mailiness"
+]
