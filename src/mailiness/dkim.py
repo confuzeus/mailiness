@@ -1,3 +1,4 @@
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from . import settings
 
@@ -13,3 +14,14 @@ class DKIM:
             public_exponent=settings.RSA_PUBLIC_EXPONENT,
             key_size=settings.DKIM_KEY_SIZE,
         )
+
+    def private_key_as_pem(self) -> str:
+        if self.private_key is None:
+            self.generate_key()
+
+        as_bytes = self.private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+        return as_bytes.decode("utf-8")
