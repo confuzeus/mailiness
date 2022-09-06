@@ -14,11 +14,10 @@ def main():
     dkim_parser = subparsers.add_parser("dkim", help="dkim commands")
     dkim_subparsers = dkim_parser.add_subparsers()
     dkim_keygen = dkim_subparsers.add_parser("keygen", help="Generate dkim key pair")
-    dkim_keygen.add_argument("--domain", "-d", type=str, help="example.com")
+    dkim_keygen.add_argument("domain", type=str, help="example.com")
     selector_timestamp = datetime.now().strftime("%Y%m%d")
     dkim_keygen.add_argument(
-        "--selector",
-        "-s",
+        "selector",
         type=str,
         help=f"Unique string to different between different dkim keys. Example: {selector_timestamp}",
     )
