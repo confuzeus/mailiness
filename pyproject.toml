@@ -31,7 +31,8 @@ dev = [
   "flake8",
   "isort",
   "hatch",
-  "pip-tools"
+  "pip-tools",
+  "pyfakefs"
 ]
 
 [project.scripts]
