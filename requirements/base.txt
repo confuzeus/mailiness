@@ -6,7 +6,13 @@
 #
 cffi==1.15.1
     # via cryptography
+commonmark==0.9.1
+    # via rich
 cryptography==37.0.4
     # via mailiness (pyproject.toml)
 pycparser==2.21
     # via cffi
+pygments==2.13.0
+    # via rich
+rich==12.5.1
+    # via mailiness (pyproject.toml)

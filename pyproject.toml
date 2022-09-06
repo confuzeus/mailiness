@@ -20,7 +20,8 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
 ]
 dependencies = [
-  "cryptography>=37,<38"
+  "cryptography>=37,<38",
+  "rich>=12,<13"
 ]
 
 [project.optional-dependencies]
