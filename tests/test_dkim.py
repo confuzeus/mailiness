@@ -1,3 +1,4 @@
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from unittest import TestCase
 
 from mailiness.dkim import DKIM
@@ -15,3 +16,7 @@ class DKIMTest(TestCase):
         self.assertEqual(dkim.selector, self.selector)
         self.assertEqual(dkim.domain, self.domain)
 
+    def test_can_generate_private_key(self):
+        dkim = DKIM(self.selector, self.domain)
+        dkim.generate_key()
+        self.assertIsInstance(dkim.private_key, RSAPrivateKey)
