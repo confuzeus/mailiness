@@ -38,3 +38,6 @@ class DKIMTest(TestCase):
 
         self.assertEqual(loaded_p, instance_p)
         self.assertEqual(loaded_q, instance_q)
+
+    def test_can_serialize_public_key_as_der(self):
+        self.assertIsInstance(self.dkim.public_key_as_der(), bytes)
