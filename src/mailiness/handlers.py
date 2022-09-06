@@ -17,4 +17,4 @@ def handle_dkim_keygen(args: Namespace):
         print(output)
 
     if args.save:
-        dkim.save_private_key()
+        key.save_private_key()
