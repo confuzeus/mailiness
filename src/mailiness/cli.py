@@ -8,7 +8,6 @@ from . import commands
 def main():
     parser = argparse.ArgumentParser(description="Manage your mail server.")
     parser.add_argument("--version", "-v", action="store_true", default=False)
-    parser.add_argument("--debug", action="store_true", default=False)
 
     subparsers = parser.add_subparsers()
 
@@ -27,10 +26,6 @@ def main():
     dkim_keygen.set_defaults(func=handlers.handle_dkim_keygen)
 
     args = parser.parse_args()
-
-    if not args.debug:
-        # TODO: Remove this.
-        raise Exception("Not ready to exit debug yet")
 
     if args.version:
         commands.print_version()
