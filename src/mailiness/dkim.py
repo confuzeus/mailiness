@@ -8,6 +8,7 @@ class DKIM:
         self.private_key = None
         self.selector = selector
         self.domain = domain
+        self.generate_key()
 
     def generate_key(self):
         self.private_key = rsa.generate_private_key(
@@ -16,12 +17,15 @@ class DKIM:
         )
 
     def private_key_as_pem(self) -> str:
-        if self.private_key is None:
-            self.generate_key()
-
         as_bytes = self.private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.NoEncryption(),
         )
         return as_bytes.decode("utf-8")
+
+    def public_key_as_der(self) -> bytes:
+        return self.private_key.public_key().public_bytes(
+            encoding=serialization.Encoding.DER,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
