@@ -7,8 +7,8 @@ from . import commands
 
 def get_parser():
     parser = argparse.ArgumentParser(description="Manage your mail server.")
-    parser.add_argument("--version", "-v", action="store_true", default=False)
-
+    parser.add_argument("--version", "-v", action="store_true", default=False, help="Show version number.")
+    parser.add_argument("--debug", action="store_true", default=False, help="Work in debug mode. Most destructive actions will be prevented.")
     subparsers = parser.add_subparsers()
 
     dkim_parser = subparsers.add_parser("dkim", help="dkim commands")
