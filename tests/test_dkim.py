@@ -1,6 +1,9 @@
+from pathlib import Path
+import tempfile
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 from unittest import TestCase
+from unittest.mock import patch
 
 from mailiness.dkim import DKIM
 
@@ -41,3 +44,22 @@ class DKIMTest(TestCase):
 
     def test_can_serialize_public_key_as_der(self):
         self.assertIsInstance(self.dkim.public_key_as_der(), bytes)
+
+    def test_private_key_is_saved(self):
+        with patch("mailiness.dkim.debug") as mock_debug:
+            mock_debug = True
+            _, self.dkim.dkim_maps_path = tempfile.mkstemp()
+            self.dkim.dkim_private_key_dir = tempfile.mkdtemp()
+            key_path = Path(self.dkim.dkim_private_key_dir) / Path(f"{self.dkim.domain}.{self.dkim.selector}.key")
+            self.dkim.save_private_key()
+            self.assertTrue(key_path.exists())
+
+            expected_content = self.dkim.private_key_as_pem()
+            with key_path.open('r', encoding='utf-8') as fp:
+                data = fp.read()
+                self.assertIn(expected_content, data)
+
+            expected_pair = f"{self.dkim.domain} {self.dkim.selector}"
+            with Path(self.dkim.dkim_maps_path).open('r', encoding='utf-8') as fp:
+                data = fp.read()
+                self.assertIn(expected_pair, data)
