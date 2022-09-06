@@ -46,7 +46,10 @@ def main():
     if args.version:
         commands.print_version()
 
-    args.func(args)
+    if getattr(args, 'func', None):
+        args.func(args)
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":
