@@ -12,6 +12,7 @@ def get_parser():
     subparsers = parser.add_subparsers()
 
     dkim_parser = subparsers.add_parser("dkim", help="dkim commands")
+    dkim_parser.set_defaults(func=dkim_parser.print_help, func_args=False)
     dkim_subparsers = dkim_parser.add_subparsers()
     dkim_keygen = dkim_subparsers.add_parser("keygen", help="Generate dkim key pair")
     dkim_keygen.add_argument("domain", type=str, help="example.com")
@@ -34,7 +35,7 @@ def get_parser():
         default=False,
         help="Save private key to configure directory (default: no)",
     )
-    dkim_keygen.set_defaults(func=handlers.handle_dkim_keygen)
+    dkim_keygen.set_defaults(func=handlers.handle_dkim_keygen, func_args=True)
     return parser
 
 def main():
@@ -47,7 +48,10 @@ def main():
         commands.print_version()
 
     if getattr(args, 'func', None):
-        args.func(args)
+        if args.func_args:
+            args.func(args)
+        else:
+            args.func()
     else:
         parser.print_help()
 
