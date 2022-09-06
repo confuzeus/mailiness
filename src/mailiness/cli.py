@@ -3,12 +3,24 @@ from datetime import datetime
 import argparse
 
 from . import commands
+from mailiness import g
 
 
 def get_parser():
     parser = argparse.ArgumentParser(description="Manage your mail server.")
-    parser.add_argument("--version", "-v", action="store_true", default=False, help="Show version number.")
-    parser.add_argument("--debug", action="store_true", default=False, help="Work in debug mode. Most destructive actions will be prevented.")
+    parser.add_argument(
+        "--version",
+        "-v",
+        action="store_true",
+        default=False,
+        help="Show version number.",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        default=False,
+        help="Work in debug mode. Most destructive actions will be prevented.",
+    )
     subparsers = parser.add_subparsers()
 
     dkim_parser = subparsers.add_parser("dkim", help="dkim commands")
@@ -38,16 +50,19 @@ def get_parser():
     dkim_keygen.set_defaults(func=handlers.handle_dkim_keygen, func_args=True)
     return parser
 
+
 def main():
 
     parser = get_parser()
 
     args = parser.parse_args()
 
+    g.debug = args.debug
+
     if args.version:
         commands.print_version()
 
-    if getattr(args, 'func', None):
+    if getattr(args, "func", None):
         if args.func_args:
             args.func(args)
         else:
