@@ -33,6 +33,36 @@ def add_dkim_parser(parser):
     )
     dkim_keygen.set_defaults(func=handlers.handle_dkim_keygen, func_args=True)
 
+
+def add_domain_parser(parser):
+    domain_parser = parser.add_parser("domain", help="domain commands")
+    domain_parser.set_defaults(func=domain_parser.print_help, func_args=False)
+    domain_subparsers = domain_parser.add_subparsers()
+
+    domain_add = domain_subparsers.add_parser("add", help="Add a domain name")
+    domain_add.add_argument("name", help="example.com")
+    domain_add.set_defaults(func=handlers.handle_domain_add, func_args=True)
+
+    domain_edit = domain_subparsers.add_parser("edit", help="Edit a domain name")
+    domain_edit_subparsers = domain_edit.add_subparsers()
+
+    domain_edit_name = domain_edit_subparsers.add_parser(
+        "name", help="Change the name of a domain name"
+    )
+    domain_edit_name.add_argument("old_name", type=str, help="Old name")
+    domain_edit_name.add_argument("new_name", type=str, help="New name")
+    domain_edit_name.set_defaults(func=handlers.handle_domain_edit_name, func_args=True)
+
+    domain_delete = domain_subparsers.add_parser(
+        "delete", help="Delete a domain name and all associated users and aliases"
+    )
+    domain_delete.add_argument("name", help="Domain name to delete")
+    domain_delete.set_defaults(func=handlers.handle_domain_delete, func_args=True)
+
+    domain_list = domain_subparsers.add_parser("list", help="List domain names")
+    domain_list.set_defaults(func=handlers.handle_domain_list, func_args=True)
+
+
 def get_parser():
     parser = argparse.ArgumentParser(description="Manage your mail server.")
     parser.add_argument(
@@ -51,6 +81,8 @@ def get_parser():
     subparsers = parser.add_subparsers()
 
     add_dkim_parser(subparsers)
+
+    add_domain_parser(subparsers)
 
     return parser
 

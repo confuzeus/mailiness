@@ -18,3 +18,19 @@ def handle_dkim_keygen(args: Namespace):
 
     if args.save:
         key.save_private_key()
+
+
+def handle_domain_add(args: Namespace):
+    print("Adding domain")
+
+
+def handle_domain_edit_name(args: Namespace):
+    print("Domain changed")
+
+
+def handle_domain_delete(args: Namespace):
+    print("Domain deleted")
+
+
+def handle_domain_list(args: Namespace):
+    print("List of domains")
