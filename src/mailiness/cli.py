@@ -6,24 +6,8 @@ from . import commands
 from mailiness import g
 
 
-def get_parser():
-    parser = argparse.ArgumentParser(description="Manage your mail server.")
-    parser.add_argument(
-        "--version",
-        "-v",
-        action="store_true",
-        default=False,
-        help="Show version number.",
-    )
-    parser.add_argument(
-        "--debug",
-        action="store_true",
-        default=False,
-        help="Work in debug mode. Most destructive actions will be prevented.",
-    )
-    subparsers = parser.add_subparsers()
-
-    dkim_parser = subparsers.add_parser("dkim", help="dkim commands")
+def add_dkim_parser(parser):
+    dkim_parser = parser.add_parser("dkim", help="dkim commands")
     dkim_parser.set_defaults(func=dkim_parser.print_help, func_args=False)
     dkim_subparsers = dkim_parser.add_subparsers()
     dkim_keygen = dkim_subparsers.add_parser("keygen", help="Generate dkim key pair")
@@ -48,6 +32,26 @@ def get_parser():
         help="Save private key to configure directory (default: no)",
     )
     dkim_keygen.set_defaults(func=handlers.handle_dkim_keygen, func_args=True)
+
+def get_parser():
+    parser = argparse.ArgumentParser(description="Manage your mail server.")
+    parser.add_argument(
+        "--version",
+        "-v",
+        action="store_true",
+        default=False,
+        help="Show version number.",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        default=False,
+        help="Work in debug mode. Most destructive actions will be prevented.",
+    )
+    subparsers = parser.add_subparsers()
+
+    add_dkim_parser(subparsers)
+
     return parser
 
 
