@@ -4,6 +4,7 @@ from unittest import TestCase
 
 from rich.table import Table
 
+from mailiness import settings
 from mailiness.repo import DomainRepository
 
 
@@ -11,7 +12,10 @@ class DomainRepositoryTest(TestCase):
     def setUp(self):
         db_conn = sqlite3.connect(":memory:")
         self.repo = DomainRepository(conn=db_conn)
-        self.repo.cursor.execute("CREATE TABLE domains(name TEXT)")
+        self.repo.cursor.execute(f"CREATE TABLE {settings.DOMAINS_TABLE_NAME}(name TEXT)")
+
+    def tearDown(self):
+        self.repo.cursor.execute(f"DROP TABLE {settings.DOMAINS_TABLE_NAME}")
 
     def test_index_returns_data_in_correct_format(self):
 
@@ -45,6 +49,16 @@ class DomainRepositoryTest(TestCase):
         self.assertIn("example.net", domains['rows'][0])
         pretty_data = self.repo.edit("name", "example.net", "example.org")
         self.assertIsInstance(pretty_data, Table)
+
+    def test_delete_domain_name(self):
+        name = "example.org"
+        self.repo.create(name)
+        domains = self.repo.index(pretty=False)
+        self.assertIn(name, domains['rows'][0])
+
+        self.repo.delete(name)
+        domains = self.repo.index(pretty=False)
+        self.assertEqual(len(domains['rows']), 0)
 
 
 if __name__ == "__main__":

@@ -72,3 +72,12 @@ class DomainRepository(BaseRepository):
         self.data["rows"] = result.fetchall()
         self.db_conn.commit()
         return self._prettify_data(self.data) if pretty else self.data
+
+    def delete(self, name):
+        """
+        Delete a domain name.
+        """
+        self.cursor.execute(
+            f"DELETE FROM {settings.DOMAINS_TABLE_NAME} WHERE name=?", [name]
+        )
+        self.db_conn.commit()

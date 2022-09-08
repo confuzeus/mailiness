@@ -39,7 +39,17 @@ def handle_domain_edit_name(args: Namespace):
 
 
 def handle_domain_delete(args: Namespace):
-    print("Domain deleted")
+    domain_repo = repo.DomainRepository()
+    answer = input(f"Are you sure you want to delete {args.name}? (y/n)")
+
+    while answer != 'y' and answer != 'n':
+        answer = input(f"Are you sure you want to delete {args.name}? (y/n)")
+
+    if answer == 'y':
+        domain_repo.delete(args.name)
+        console.print(f"{args.name} deleted.")
+    else:
+        console.print(f"{args.name} not deleted.")
 
 
 def handle_domain_list(args: Namespace):
