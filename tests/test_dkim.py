@@ -1,3 +1,4 @@
+import base64
 from pathlib import Path
 import tempfile
 from cryptography.hazmat.primitives import serialization
@@ -47,19 +48,28 @@ class DKIMTest(TestCase):
 
     def test_private_key_is_saved(self):
         with patch("mailiness.dkim.debug") as mock_debug:
-            mock_debug = True
+            mock_debug = True  # noqa: F841
             _, self.dkim.dkim_maps_path = tempfile.mkstemp()
             self.dkim.dkim_private_key_dir = tempfile.mkdtemp()
-            key_path = Path(self.dkim.dkim_private_key_dir) / Path(f"{self.dkim.domain}.{self.dkim.selector}.key")
+            key_path = Path(self.dkim.dkim_private_key_dir) / Path(
+                f"{self.dkim.domain}.{self.dkim.selector}.key"
+            )
             self.dkim.save_private_key()
             self.assertTrue(key_path.exists())
 
             expected_content = self.dkim.private_key_as_pem()
-            with key_path.open('r', encoding='utf-8') as fp:
+            with key_path.open("r", encoding="utf-8") as fp:
                 data = fp.read()
                 self.assertIn(expected_content, data)
 
             expected_pair = f"{self.dkim.domain} {self.dkim.selector}"
-            with Path(self.dkim.dkim_maps_path).open('r', encoding='utf-8') as fp:
+            with Path(self.dkim.dkim_maps_path).open("r", encoding="utf-8") as fp:
                 data = fp.read()
                 self.assertIn(expected_pair, data)
+
+    def test_dns_txt_record_contains_correct_data(self):
+        txt_record = self.dkim.dns_txt_record()
+        self.assertIsInstance(txt_record, str)
+        self.assertContains(f"{self.selector}._domainkey", txt_record)
+        b64_der_pubkey = base64.b64encode(self.dkim.public_key_as_der())
+        self.assertContains(b64_der_pubkey.decode("utf-8"), txt_record)

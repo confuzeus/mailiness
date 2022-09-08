@@ -1,3 +1,4 @@
+import base64
 import re
 import tempfile
 import subprocess
@@ -25,8 +26,6 @@ class DKIM:
             self.dkim_maps_path = settings.DKIM_MAPS_PATH
             self.dkim_private_key_dir = settings.DKIM_PRIVATE_KEY_DIRECTORY
 
-
-
     def generate_key(self):
         self.private_key = rsa.generate_private_key(
             public_exponent=settings.RSA_PUBLIC_EXPONENT,
@@ -50,7 +49,7 @@ class DKIM:
     def load_dkim_map(self, data: str) -> dict:
         result = {}
         for line in data.splitlines():
-            domain, selector = line.split(' ')
+            domain, selector = line.split(" ")
             result[domain] = selector
         return result
 
@@ -64,8 +63,18 @@ class DKIM:
         with Path(self.dkim_maps_path).open("w", encoding="utf-8") as fp:
             fp.write(new_map)
 
+    def dns_txt_record(self) -> str:
+        b64_der_pubkey = base64.b64encode(self.public_key_as_der())
+        txt_record = ""
+        txt_record += f"DNS TXT Record for {self.domain}\n\n\n\n"
+        txt_record += f"Name:\n\n{self.selector}._domainkey\n\n\n"
+        txt_record += f"Content:\n\nv=DKIM1;k=rsa;p={b64_der_pubkey.decode('utf-8')}"
+        return txt_record
+
     def save_private_key(self):
-        dest = Path(self.dkim_private_key_dir) / Path(f"{self.domain}.{self.selector}.key")
+        dest = Path(self.dkim_private_key_dir) / Path(
+            f"{self.domain}.{self.selector}.key"
+        )
 
         with dest.open("w", encoding="utf-8") as fp:
             fp.write(self.private_key_as_pem())
@@ -75,7 +84,7 @@ class DKIM:
 
         dkim_map_file = Path(self.dkim_maps_path)
 
-        with dkim_map_file.open('r', encoding="utf-8") as fp:
+        with dkim_map_file.open("r", encoding="utf-8") as fp:
             dkim_map = self.load_dkim_map(fp.read())
 
         dkim_map[self.domain] = self.selector
