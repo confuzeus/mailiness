@@ -16,11 +16,12 @@ class BaseRepository:
         else:
             self.db_conn = conn
         self.cursor = self.db_conn.cursor()
+        self.data = {"headers": ("ID (rowid)", "Name"), "rows": []}
 
 
 class DomainRepository(BaseRepository):
-    def _prettify_index(self, data) -> Table:
-        table = Table(title="Add domains")
+    def _prettify_data(self, data) -> Table:
+        table = Table(title="Domains")
         for header in data["headers"]:
             table.add_column(header)
 
@@ -39,9 +40,19 @@ class DomainRepository(BaseRepository):
         result = self.cursor.execute(
             "SELECT rowid, name FROM %s" % settings.DOMAINS_TABLE_NAME
         )
-        headers = ("ID (rowid)", "Name")
-        data = {"headers": headers, "rows": result.fetchall()}
-        if pretty:
-            data = self._prettify_index(data)
+        self.data['rows'] = result.fetchall()
+        return self._prettify_data(self.data) if pretty else self.data
 
-        return data
+    def create(self, name: str, pretty=True) -> Union[dict, Table]:
+        """
+        Add a domain name to the database and return the result.
+
+        If pretty is true, return a rich table representation.
+        """
+        result = self.cursor.execute(
+            f"INSERT INTO {settings.DOMAINS_TABLE_NAME} VALUES(?) RETURNING rowid, name",
+            [name],
+        )
+        self.data['rows'] = result.fetchall()
+        self.db_conn.commit()
+        return self._prettify_data(self.data) if pretty else self.data

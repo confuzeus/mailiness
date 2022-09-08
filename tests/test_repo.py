@@ -19,10 +19,20 @@ class DomainRepositoryTest(TestCase):
         data = self.repo.index(pretty=False)
 
         self.assertIsInstance(data["headers"], tuple)
-        self.assertIn("example.com", data['rows'][0])
+        self.assertIn("example.com", data["rows"][0])
 
         pretty_data = self.repo.index()
         self.assertIsInstance(pretty_data, Table)
+
+    def test_create_adds_domain_to_db_and_returns_correct_format(self):
+        data = self.repo.create("example.org", pretty=False)
+        self.assertIsInstance(data["headers"], tuple)
+        self.assertIn("example.org", data["rows"][0])
+        pretty_data = self.repo.create("example.net")
+        self.assertIsInstance(pretty_data, Table)
+
+        domains = self.repo.index(pretty=False)
+        self.assertIn("example.org", domains["rows"][0])
 
 
 if __name__ == "__main__":

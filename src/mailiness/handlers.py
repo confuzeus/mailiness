@@ -24,7 +24,10 @@ def handle_dkim_keygen(args: Namespace):
 
 
 def handle_domain_add(args: Namespace):
-    print("Adding domain")
+    domain_repo = repo.DomainRepository()
+    tbl = domain_repo.create(args.name)
+    console.print(f"{args.name} added to database")
+    console.print(tbl)
 
 
 def handle_domain_edit_name(args: Namespace):
