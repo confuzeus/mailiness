@@ -1,11 +1,10 @@
 import argparse
-from datetime import datetime
 
 from mailiness import g
 
-from . import commands, handlers
+from . import commands, handlers, dkim
 
-selector_timestamp = datetime.now().strftime("%Y%m%d")
+selector_timestamp = dkim.get_default_selector()
 
 
 def add_dkim_parser(parser):
@@ -69,6 +68,21 @@ def add_domain_parser(parser):
         "delete", help="Delete a domain name and all associated users and aliases"
     )
     domain_delete.add_argument("name", help="Domain name to delete")
+    domain_delete.add_argument(
+        "--mailbox",
+        action="store_true",
+        default=False,
+        help="Delete mailboxes as well.",
+    )
+    domain_delete.add_argument(
+        "--dkim", action="store_true", default=False, help="Delete DKIM key as well."
+    )
+    domain_delete.add_argument(
+        "--all",
+        action="store_true",
+        default=False,
+        help="Delete domain and mailboxes, DKIM keys, etc.",
+    )
     domain_delete.set_defaults(func=handlers.handle_domain_delete, func_args=True)
 
     domain_list = domain_subparsers.add_parser("list", help="List domain names")
