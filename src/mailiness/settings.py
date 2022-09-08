@@ -1,3 +1,7 @@
+DB_CONNECTION_STRING = "/var/local/mailserver.db"
+
+DOMAINS_TABLE_NAME = "domains"
+
 DKIM_PRIVATE_KEY_DIRECTORY= "/var/lib/rspamd/dkim"
 
 DKIM_MAPS_PATH = "/etc/rspamd/dkim_selectors.map"
