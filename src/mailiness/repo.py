@@ -1,5 +1,6 @@
 import sqlite3
 from typing import Union
+
 from rich.table import Table
 
 from . import settings
@@ -12,7 +13,7 @@ def get_db_conn(dsn=settings.DB_CONNECTION_STRING):
 class BaseRepository:
     def __init__(self, conn=None):
         if conn is None:
-            self.db_conn = get_db_conn(dsn)
+            self.db_conn = get_db_conn()
         else:
             self.db_conn = conn
         self.cursor = self.db_conn.cursor()
@@ -40,7 +41,7 @@ class DomainRepository(BaseRepository):
         result = self.cursor.execute(
             "SELECT rowid, name FROM %s" % settings.DOMAINS_TABLE_NAME
         )
-        self.data['rows'] = result.fetchall()
+        self.data["rows"] = result.fetchall()
         return self._prettify_data(self.data) if pretty else self.data
 
     def create(self, name: str, pretty=True) -> Union[dict, Table]:
@@ -53,6 +54,6 @@ class DomainRepository(BaseRepository):
             f"INSERT INTO {settings.DOMAINS_TABLE_NAME} VALUES(?) RETURNING rowid, name",
             [name],
         )
-        self.data['rows'] = result.fetchall()
+        self.data["rows"] = result.fetchall()
         self.db_conn.commit()
         return self._prettify_data(self.data) if pretty else self.data

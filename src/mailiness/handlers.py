@@ -1,10 +1,11 @@
-from rich.console import Console
 from argparse import Namespace
 
-from . import repo
-from . import dkim
+from rich.console import Console
+
+from . import dkim, repo
 
 console = Console()
+
 
 def handle_dkim_keygen(args: Namespace):
     key = dkim.DKIM(domain=args.domain, selector=args.selector)

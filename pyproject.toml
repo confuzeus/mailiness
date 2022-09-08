@@ -49,3 +49,6 @@ path = "src/mailiness/__init__.py"
 packages = [
   "src/mailiness"
 ]
+
+[tool.isort]
+profile = "black"

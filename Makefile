@@ -1,7 +1,7 @@
 .PHONY: install-requirements compile-requirements \
 	build-source build-wheel build \
 	publish-test publish release \
-	version-patch version-minor version-major
+	version-patch version-minor version-major fmt lint fmtl
 
 install-requirements:
 	pip install -r requirements/base.txt -r requirements/dev.txt
@@ -35,6 +35,15 @@ version-minor:
 
 version-major:
 	hatch version major
+
+fmt:
+	@black --exclude __pycache__ src tests
+	@isort --skip __pycache__ src tests
+
+lint:
+	@flake8 src tests
+
+fmtl: fmt lint
 
 clean:
 	hatch clean

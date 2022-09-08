@@ -1,10 +1,11 @@
 import base64
-from pathlib import Path
 import tempfile
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+from pathlib import Path
 from unittest import TestCase
 from unittest.mock import patch
+
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
 from mailiness.dkim import DKIM
 

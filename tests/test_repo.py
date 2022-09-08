@@ -1,6 +1,8 @@
-from rich.table import Table
 import sqlite3
+import unittest
 from unittest import TestCase
+
+from rich.table import Table
 
 from mailiness.repo import DomainRepository
 

@@ -1,9 +1,9 @@
-from . import handlers
-from datetime import datetime
 import argparse
+from datetime import datetime
 
-from . import commands
 from mailiness import g
+
+from . import commands, handlers
 
 
 def add_dkim_parser(parser):
@@ -18,7 +18,7 @@ def add_dkim_parser(parser):
         type=str,
         default=selector_timestamp,
         help=f"Unique string to different between different dkim keys. Example: {selector_timestamp}",
-        nargs="?"
+        nargs="?",
     )
     dkim_keygen.add_argument(
         "--print",
