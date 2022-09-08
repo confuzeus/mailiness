@@ -1,3 +1,4 @@
+from typing import Optional
 import base64
 import shutil
 import subprocess
@@ -14,18 +15,37 @@ from . import settings
 debug = getattr(g, "debug", False)
 
 
+def get_default_selector():
+    return datetime.now().strftime("%Y%m%d")
+
+
 class DKIM:
-    def __init__(self, selector: str, domain: str):
-        self.private_key = None
-        self.selector = selector
-        self.domain = domain
-        self.generate_key()
+    def __init__(self, domain: str, selector: Optional[str] = None):
         if debug:
             _, self.dkim_maps_path = tempfile.mkstemp()
             self.dkim_private_key_dir = tempfile.mkdtemp()
         else:
             self.dkim_maps_path = settings.DKIM_MAPS_PATH
             self.dkim_private_key_dir = settings.DKIM_PRIVATE_KEY_DIRECTORY
+        dkim_map = self.load_from_dkim_map_file()
+        self.private_key = None
+        if domain in dkim_map.keys():
+            self.selector = dkim_map[domain]
+            with (
+                Path(settings.DKIM_PRIVATE_KEY_DIRECTORY)
+                / Path(f"{self.domain}.{self.selector}.key")
+            ).open("rb") as fp:
+                self.private_key = serialization.load_pem_private_key(
+                    fp.read(), password=None
+                )
+        else:
+            self.generate_key()
+            if selector is None:
+                self.selector = get_default_selector()
+            else:
+                self.selector = selector
+
+        self.domain = domain
 
     def generate_key(self):
         self.private_key = rsa.generate_private_key(
@@ -72,6 +92,19 @@ class DKIM:
         txt_record += f"Content:\n\nv=DKIM1;k=rsa;p={b64_der_pubkey.decode('utf-8')}"
         return txt_record
 
+    def delete_key(self, domain_name: str):
+        dkim_map = self.load_from_dkim_map_file()
+        del dkim_map[domain_name]
+        self.write_dkim_map(dkim_map)
+
+    def load_from_dkim_map_file(self) -> dict:
+        dkim_map_file = Path(self.dkim_maps_path)
+
+        if dkim_map_file.exists():
+            with dkim_map_file.open("r", encoding="utf-8") as fp:
+                return self.load_dkim_map(fp.read())
+        return {}
+
     def save_private_key(self):
         dest = Path(self.dkim_private_key_dir) / Path(
             f"{self.domain}.{self.selector}.key"
@@ -83,10 +116,7 @@ class DKIM:
         if not debug:
             shutil.chown(str(dest), user="_rspamd", group="_rspamd")
 
-        dkim_map_file = Path(self.dkim_maps_path)
-
-        with dkim_map_file.open("r", encoding="utf-8") as fp:
-            dkim_map = self.load_dkim_map(fp.read())
+        dkim_map = self.load_from_dkim_map_file()
 
         dkim_map[self.domain] = self.selector
 
