@@ -1,8 +1,11 @@
+from rich.console import Console
 import base64
 from argparse import Namespace
 
+from . import repo
 from . import dkim
 
+console = Console()
 
 def handle_dkim_keygen(args: Namespace):
     key = dkim.DKIM(domain=args.domain, selector=args.selector)
@@ -33,4 +36,6 @@ def handle_domain_delete(args: Namespace):
 
 
 def handle_domain_list(args: Namespace):
-    print("List of domains")
+    domain_repo = repo.DomainRepository()
+    tbl = domain_repo.index()
+    console.print(tbl)
