@@ -57,3 +57,18 @@ class DomainRepository(BaseRepository):
         self.data["rows"] = result.fetchall()
         self.db_conn.commit()
         return self._prettify_data(self.data) if pretty else self.data
+
+    def edit(self, what: str, old: str, new: str, pretty=True) -> Union[dict, Table]:
+        """
+        Change a domain's "what" attribute from old to new.
+        """
+        if what in ("name",):
+            result = self.cursor.execute(
+                f"UPDATE {settings.DOMAINS_TABLE_NAME} SET {what}=? WHERE {what}=? RETURNING rowid, name",
+                [new, old],
+            )
+        else:
+            raise ValueError(f"I don't know what {what} is.")
+        self.data["rows"] = result.fetchall()
+        self.db_conn.commit()
+        return self._prettify_data(self.data) if pretty else self.data

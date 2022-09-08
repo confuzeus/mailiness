@@ -32,7 +32,10 @@ def handle_domain_add(args: Namespace):
 
 
 def handle_domain_edit_name(args: Namespace):
-    print("Domain changed")
+    domain_repo = repo.DomainRepository()
+    tbl = domain_repo.edit("name", args.old_name, args.new_name)
+    console.print(f"{args.old_name} changed to {args.new_name}")
+    console.print(tbl)
 
 
 def handle_domain_delete(args: Namespace):

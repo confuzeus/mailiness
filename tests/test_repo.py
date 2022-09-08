@@ -36,6 +36,16 @@ class DomainRepositoryTest(TestCase):
         domains = self.repo.index(pretty=False)
         self.assertIn("example.org", domains["rows"][0])
 
+    def test_edit_domain_name_updates_data_and_returns_correct_format(self):
+        self.repo.create("example.org")
+        data = self.repo.edit("name", "example.org", "example.net", pretty=False)
+        self.assertIsInstance(data['headers'], tuple)
+        self.assertIn("example.net", data["rows"][0])
+        domains = self.repo.index(pretty=False)
+        self.assertIn("example.net", domains['rows'][0])
+        pretty_data = self.repo.edit("name", "example.net", "example.org")
+        self.assertIsInstance(pretty_data, Table)
+
 
 if __name__ == "__main__":
     unittest.main()
