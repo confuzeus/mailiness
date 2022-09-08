@@ -16,7 +16,9 @@ def add_dkim_parser(parser):
     dkim_keygen.add_argument(
         "selector",
         type=str,
+        default=selector_timestamp,
         help=f"Unique string to different between different dkim keys. Example: {selector_timestamp}",
+        nargs="?"
     )
     dkim_keygen.add_argument(
         "--print",
