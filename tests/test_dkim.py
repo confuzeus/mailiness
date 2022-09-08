@@ -14,7 +14,7 @@ class DKIMTest(TestCase):
     def setUp(self):
         self.selector = "20220906"
         self.domain = "example.com"
-        self.dkim = DKIM(self.selector, self.domain)
+        self.dkim = DKIM(self.domain, self.selector)
 
     def test_new_dkim_instance_has_correct_attributes_set(self):
         self.assertEqual(self.dkim.selector, self.selector)
@@ -71,6 +71,6 @@ class DKIMTest(TestCase):
     def test_dns_txt_record_contains_correct_data(self):
         txt_record = self.dkim.dns_txt_record()
         self.assertIsInstance(txt_record, str)
-        self.assertContains(f"{self.selector}._domainkey", txt_record)
+        self.assertIn(f"{self.selector}._domainkey", txt_record)
         b64_der_pubkey = base64.b64encode(self.dkim.public_key_as_der())
-        self.assertContains(b64_der_pubkey.decode("utf-8"), txt_record)
+        self.assertIn(b64_der_pubkey.decode("utf-8"), txt_record)
