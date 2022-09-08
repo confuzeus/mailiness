@@ -5,6 +5,8 @@ from mailiness import g
 
 from . import commands, handlers
 
+selector_timestamp = datetime.now().strftime("%Y%m%d")
+
 
 def add_dkim_parser(parser):
     dkim_parser = parser.add_parser("dkim", help="dkim commands")
@@ -12,7 +14,6 @@ def add_dkim_parser(parser):
     dkim_subparsers = dkim_parser.add_subparsers()
     dkim_keygen = dkim_subparsers.add_parser("keygen", help="Generate dkim key pair")
     dkim_keygen.add_argument("domain", type=str, help="example.com")
-    selector_timestamp = datetime.now().strftime("%Y%m%d")
     dkim_keygen.add_argument(
         "selector",
         type=str,
@@ -43,6 +44,15 @@ def add_domain_parser(parser):
 
     domain_add = domain_subparsers.add_parser("add", help="Add a domain name")
     domain_add.add_argument("name", help="example.com")
+    domain_add.add_argument(
+        "--dkim",
+        action="store_true",
+        default=False,
+        help="Generate and save a DKIM key pair in one fell swoop.",
+    )
+    domain_add.add_argument(
+        "--selector", nargs="?", default=selector_timestamp, help="DKIM selector"
+    )
     domain_add.set_defaults(func=handlers.handle_domain_add, func_args=True)
 
     domain_edit = domain_subparsers.add_parser("edit", help="Edit a domain name")

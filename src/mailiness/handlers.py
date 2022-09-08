@@ -25,6 +25,11 @@ def handle_domain_add(args: Namespace):
     console.print(f"{args.name} added to database")
     console.print(tbl)
 
+    if args.dkim:
+        key = dkim.DKIM(domain=args.name, selector=args.selector)
+        key.save_private_key()
+        print(key.dns_txt_record())
+
 
 def handle_domain_edit_name(args: Namespace):
     print("Domain changed")
