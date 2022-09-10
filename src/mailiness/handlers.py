@@ -1,7 +1,11 @@
+import tempfile
+from pathlib import Path
+import shutil
 from argparse import Namespace
 
 from rich.console import Console
 
+from . import settings
 from . import dkim, repo
 
 console = Console()
@@ -42,12 +46,35 @@ def handle_domain_delete(args: Namespace):
     domain_repo = repo.DomainRepository()
     answer = input(f"Are you sure you want to delete {args.name}? (y/n)")
 
-    while answer != 'y' and answer != 'n':
+    while answer != "y" and answer != "n":
         answer = input(f"Are you sure you want to delete {args.name}? (y/n)")
 
-    if answer == 'y':
+    if answer == "y":
         domain_repo.delete(args.name)
         console.print(f"{args.name} deleted.")
+
+        def _delete_dkim_key(domain):
+            key = dkim.DKIM(domain=domain)
+            key.delete_key()
+            print("Private key deleted.")
+
+        def _delete_mailbox_directory(domain):
+            if args.debug:
+                vmail_directory = Path(tempfile.mkdtemp())
+            else:
+                vmail_directory = Path(settings.VMAIL_DIRECTORY)
+
+            shutil.rmtree(vmail_directory / domain)
+            print("Mailboxes deleted.")
+
+        if args.all:
+            _delete_dkim_key(domain)
+            _delete_mailbox_directory(domain)
+        else:
+            if args.dkim:
+                _delete_dkim_key(args.domain)
+            elif args.mailbox:
+                _delete_mailbox_directory()
     else:
         console.print(f"{args.name} not deleted.")
 

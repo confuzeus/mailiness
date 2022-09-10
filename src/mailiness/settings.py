@@ -1,3 +1,5 @@
+VMAIL_DIRECTORY = "/var/vmail"
+
 DB_CONNECTION_STRING = "/var/local/mailserver.db"
 
 DOMAINS_TABLE_NAME = "domains"
