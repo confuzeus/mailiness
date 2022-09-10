@@ -74,3 +74,22 @@ class DKIMTest(TestCase):
         self.assertIn(f"{self.selector}._domainkey", txt_record)
         b64_der_pubkey = base64.b64encode(self.dkim.public_key_as_der())
         self.assertIn(b64_der_pubkey.decode("utf-8"), txt_record)
+
+    def test_delete_dkim_removes_from_map_and_deletes_keyfile(self):
+        with patch("mailiness.dkim.debug") as mock_debug:
+            mock_debug = True  # noqa: F841
+            _, self.dkim.dkim_maps_path = tempfile.mkstemp()
+            self.dkim.dkim_private_key_dir = tempfile.mkdtemp()
+            self.dkim.save_private_key()
+
+            dkim_map = self.dkim.load_from_dkim_map_file()
+            self.assertIn(self.domain, dkim_map.keys())
+
+            key_file = Path(self.dkim.dkim_private_key_dir) / Path(f"{self.dkim.domain}.{self.dkim.selector}.key")
+
+            self.assertTrue(key_file.exists())
+
+            self.dkim.delete_key()
+            dkim_map = self.dkim.load_from_dkim_map_file()
+            self.assertNotIn(self.domain, dkim_map.keys())
+            self.assertFalse(key_file.exists())

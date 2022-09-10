@@ -32,7 +32,7 @@ class DKIM:
         if domain in dkim_map.keys():
             self.selector = dkim_map[domain]
             with (
-                Path(settings.DKIM_PRIVATE_KEY_DIRECTORY)
+                Path(self.dkim_private_key_dir)
                 / Path(f"{self.domain}.{self.selector}.key")
             ).open("rb") as fp:
                 self.private_key = serialization.load_pem_private_key(
@@ -92,10 +92,16 @@ class DKIM:
         txt_record += f"Content:\n\nv=DKIM1;k=rsa;p={b64_der_pubkey.decode('utf-8')}"
         return txt_record
 
-    def delete_key(self, domain_name: str):
+    def delete_key(self):
         dkim_map = self.load_from_dkim_map_file()
-        del dkim_map[domain_name]
+        del dkim_map[self.domain]
         self.write_dkim_map(dkim_map)
+
+        key_file = Path(self.dkim_private_key_dir) / Path(
+            f"{self.domain}.{self.selector}.key"
+        )
+
+        key_file.unlink(missing_ok=True)
 
     def load_from_dkim_map_file(self) -> dict:
         dkim_map_file = Path(self.dkim_maps_path)
