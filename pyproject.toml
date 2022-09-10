@@ -32,7 +32,6 @@ dev = [
   "isort",
   "hatch",
   "pip-tools",
-  "pyfakefs"
 ]
 
 [project.scripts]
