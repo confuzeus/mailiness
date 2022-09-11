@@ -1,3 +1,4 @@
+from typing import Optional, Sequence
 import argparse
 
 from mailiness import g
@@ -113,11 +114,11 @@ def get_parser():
     return parser
 
 
-def main():
+def main(args: Optional[Sequence] = None):
 
     parser = get_parser()
 
-    args = parser.parse_args()
+    args = parser.parse_args(args=args)
 
     g.debug = args.debug
 
