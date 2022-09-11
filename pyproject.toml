@@ -21,7 +21,8 @@ classifiers = [
 ]
 dependencies = [
   "cryptography>=37,<38",
-  "rich>=12,<13"
+  "rich>=12,<13",
+  "bcrypt>=4.0,<5.0",
 ]
 
 [project.optional-dependencies]

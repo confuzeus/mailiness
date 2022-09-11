@@ -10,6 +10,8 @@ anyio==3.6.1
     # via httpcore
 babel==2.10.3
     # via sphinx
+bcrypt==4.0.0
+    # via mailiness (pyproject.toml)
 black==22.8.0
     # via mailiness (pyproject.toml)
 build==0.8.0

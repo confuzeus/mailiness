@@ -4,6 +4,8 @@
 #
 #    pip-compile --output-file=requirements/base.txt pyproject.toml
 #
+bcrypt==4.0.0
+    # via mailiness (pyproject.toml)
 cffi==1.15.1
     # via cryptography
 commonmark==0.9.1
