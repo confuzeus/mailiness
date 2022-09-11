@@ -12,7 +12,9 @@ class DomainRepositoryTest(TestCase):
     def setUp(self):
         db_conn = sqlite3.connect(":memory:")
         self.repo = DomainRepository(conn=db_conn)
-        self.repo.cursor.execute(f"CREATE TABLE {settings.DOMAINS_TABLE_NAME}(name TEXT)")
+        self.repo.cursor.execute(
+            f"CREATE TABLE {settings.DOMAINS_TABLE_NAME}(name TEXT)"
+        )
 
     def tearDown(self):
         self.repo.cursor.execute(f"DROP TABLE {settings.DOMAINS_TABLE_NAME}")
@@ -43,10 +45,10 @@ class DomainRepositoryTest(TestCase):
     def test_edit_domain_name_updates_data_and_returns_correct_format(self):
         self.repo.create("example.org")
         data = self.repo.edit("name", "example.org", "example.net", pretty=False)
-        self.assertIsInstance(data['headers'], tuple)
+        self.assertIsInstance(data["headers"], tuple)
         self.assertIn("example.net", data["rows"][0])
         domains = self.repo.index(pretty=False)
-        self.assertIn("example.net", domains['rows'][0])
+        self.assertIn("example.net", domains["rows"][0])
         pretty_data = self.repo.edit("name", "example.net", "example.org")
         self.assertIsInstance(pretty_data, Table)
 
@@ -54,11 +56,11 @@ class DomainRepositoryTest(TestCase):
         name = "example.org"
         self.repo.create(name)
         domains = self.repo.index(pretty=False)
-        self.assertIn(name, domains['rows'][0])
+        self.assertIn(name, domains["rows"][0])
 
         self.repo.delete(name)
         domains = self.repo.index(pretty=False)
-        self.assertEqual(len(domains['rows']), 0)
+        self.assertEqual(len(domains["rows"]), 0)
 
 
 if __name__ == "__main__":

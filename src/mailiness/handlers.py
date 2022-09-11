@@ -1,12 +1,11 @@
-import tempfile
-from pathlib import Path
 import shutil
+import tempfile
 from argparse import Namespace
+from pathlib import Path
 
 from rich.console import Console
 
-from . import settings
-from . import dkim, repo
+from . import dkim, repo, settings
 
 console = Console()
 
@@ -68,8 +67,8 @@ def handle_domain_delete(args: Namespace):
             print("Mailboxes deleted.")
 
         if args.all:
-            _delete_dkim_key(domain)
-            _delete_mailbox_directory(domain)
+            _delete_dkim_key(args.domain)
+            _delete_mailbox_directory(args.domain)
         else:
             if args.dkim:
                 _delete_dkim_key(args.domain)

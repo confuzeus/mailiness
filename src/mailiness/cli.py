@@ -1,9 +1,9 @@
-from typing import Optional, Sequence
 import argparse
+from typing import Optional, Sequence
 
 from mailiness import g
 
-from . import commands, handlers, dkim
+from . import commands, dkim, handlers
 
 selector_timestamp = dkim.get_default_selector()
 

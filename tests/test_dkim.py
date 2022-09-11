@@ -85,7 +85,9 @@ class DKIMTest(TestCase):
             dkim_map = self.dkim.load_from_dkim_map_file()
             self.assertIn(self.domain, dkim_map.keys())
 
-            key_file = Path(self.dkim.dkim_private_key_dir) / Path(f"{self.dkim.domain}.{self.dkim.selector}.key")
+            key_file = Path(self.dkim.dkim_private_key_dir) / Path(
+                f"{self.dkim.domain}.{self.dkim.selector}.key"
+            )
 
             self.assertTrue(key_file.exists())
 
