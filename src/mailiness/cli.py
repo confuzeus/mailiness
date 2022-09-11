@@ -118,7 +118,7 @@ def add_user_parser(parser):
     user_edit = user_subparsers.add_parser("edit", help="Edit a user")
     user_edit.add_argument("email", help="The target's current email address")
     user_edit.add_argument(
-        "--email", "-e", help="Change the user's email address to this new one."
+        "--new-email", "-e", help="Change the user's email address to this new one."
     )
     user_edit_password_group = user_edit.add_mutually_exclusive_group()
     user_edit_password_group.add_argument(
