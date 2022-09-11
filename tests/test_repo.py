@@ -118,5 +118,39 @@ class UserRepositoryTest(TestCase):
         self.assertNotEqual(password_hash, "secret")
         self.assertTrue(bcrypt.checkpw(b"secret", password_hash.encode('utf-8')))
 
+    def test_edit_updates_data_in_db(self):
+        self.domain_repo.create("smith.com")
+        target = "john@smith.com"
+        self.repo.create(target, "secret", 2)
+
+        self.repo.edit(target, password="password")
+
+        result = self.repo.cursor.execute(
+            f"SELECT password FROM {settings.USERS_TABLE_NAME} WHERE email=?", [target]
+        )
+        row = result.fetchone()
+        _, password_hash = row[0].split(settings.PASSWORD_HASH_PREFIX)
+        self.assertFalse(bcrypt.checkpw(b'secret', password_hash.encode('utf-8')))
+        self.assertTrue(bcrypt.checkpw(b'password', password_hash.encode('utf-8')))
+
+        self.repo.edit(target, quota=1)
+
+        result = self.repo.cursor.execute(
+            f"SELECT quota FROM {settings.USERS_TABLE_NAME} WHERE email=?", [target]
+        )
+        row = result.fetchone()
+        self.assertEqual(int(row[0]), 1_000_000_000)
+
+        new_email = "yung@smith.com"
+
+        self.repo.edit(target, new_email=new_email)
+
+        result = self.repo.cursor.execute(
+            f"SELECT email FROM {settings.USERS_TABLE_NAME} WHERE email=?", [new_email]
+        )
+        row = result.fetchone()
+        self.assertEqual(len(row), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

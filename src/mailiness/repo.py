@@ -113,9 +113,9 @@ class UserRepository(BaseRepository):
         return self._prettify_data() if pretty else self.data
 
     def _hash_password(self, password: str) -> str:
-        h = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        h = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
-        s = h.decode('utf-8')
+        s = h.decode("utf-8")
 
         if settings.INSERT_PASSWORD_HASH_PREFIX:
             s = settings.PASSWORD_HASH_PREFIX + s
@@ -123,7 +123,7 @@ class UserRepository(BaseRepository):
         return s
 
     def _get_domain_id_from_email(self, email: str) -> int:
-        _, domain = email.split('@')
+        _, domain = email.split("@")
         result = self.cursor.execute(
             f"SELECT rowid FROM {settings.DOMAINS_TABLE_NAME} WHERE name=?", [domain]
         )
@@ -141,7 +141,9 @@ class UserRepository(BaseRepository):
         """
         return quota * 1_000_000_000
 
-    def create(self, email: str, password: str, quota: int, pretty=True) -> Union[dict, Table]:
+    def create(
+        self, email: str, password: str, quota: int, pretty=True
+    ) -> Union[dict, Table]:
         """
         Create a new user using the parameters.
 
@@ -151,9 +153,41 @@ class UserRepository(BaseRepository):
         domain_id = self._get_domain_id_from_email(email)
         quota_bytes = self._quota_gb_to_bytes(quota)
         result = self.cursor.execute(
-            f"INSERT INTO {settings.USERS_TABLE_NAME} VALUES (?,?,?,?) RETURNING rowid, email, quota", [domain_id, email, hashed_password, quota_bytes]
+            f"INSERT INTO {settings.USERS_TABLE_NAME} VALUES (?,?,?,?) RETURNING rowid, email, quota",
+            [domain_id, email, hashed_password, quota_bytes],
         )
-        self.data['rows'] = result.fetchall()
+        self.data["rows"] = result.fetchall()
         self.db_conn.commit()
 
         return self._prettify_data() if pretty else self.data
+
+    def edit(
+        self,
+        email: str,
+        new_email: Optional[str] = None,
+        password: Optional[str] = None,
+        quota: Optional[int] = None,
+    ):
+        stmt = f"UPDATE {settings.USERS_TABLE_NAME} SET %s WHERE email=?"
+        placeholders = []
+        bindings = []
+        if new_email:
+            domain_id = self._get_domain_id_from_email(new_email)
+            placeholders.append("domain_id=?")
+            placeholders.append("email=?")
+            bindings += [domain_id, new_email]
+        if password:
+            hashed_password = self._hash_password(password)
+            placeholders.append("password=?")
+            bindings.append(hashed_password)
+        if quota:
+            quota_bytes = self._quota_gb_to_bytes(quota)
+            placeholders.append("quota=?")
+            bindings.append(quota_bytes)
+
+        stmt = stmt % ",".join(placeholders)
+
+        bindings.append(email)
+
+        self.cursor.execute(stmt, *[bindings])
+        self.db_conn.commit()
