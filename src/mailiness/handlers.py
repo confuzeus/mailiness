@@ -82,3 +82,19 @@ def handle_domain_list(args: Namespace):
     domain_repo = repo.DomainRepository()
     tbl = domain_repo.index()
     console.print(tbl)
+
+
+def handle_user_add(args: Namespace):
+    print("Added user")
+
+
+def handle_user_edit(args: Namespace):
+    print("Editing user")
+
+
+def handle_user_list(args: Namespace):
+    print("Listing users")
+
+
+def handle_user_delete(args: Namespace):
+    print("Deleting user")

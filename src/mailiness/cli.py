@@ -90,6 +90,70 @@ def add_domain_parser(parser):
     domain_list.set_defaults(func=handlers.handle_domain_list, func_args=True)
 
 
+def add_user_parser(parser):
+    user_parser = parser.add_parser("user", help="user commands")
+    user_parser.set_defaults(func=user_parser.print_help, func_args=False)
+    user_subparsers = user_parser.add_subparsers()
+
+    user_add = user_subparsers.add_parser("add", help="Add a user")
+    user_add.add_argument("email", type=str, help="john@smith.com")
+    user_add_password_group = user_add.add_mutually_exclusive_group()
+    user_add_password_group.add_argument(
+        "password",
+        type=str,
+        nargs="?",
+        help="The user's password. Will be prompted if not provided",
+    )
+    user_add_password_group.add_argument(
+        "--random-password",
+        action="store_true",
+        default=False,
+        help="Set the user's password to a random value.",
+    )
+    user_add.add_argument(
+        "--quota", "-q", help="The user's disk quota in GB.", type=str
+    )
+    user_add.set_defaults(func=handlers.handle_user_add, func_args=True)
+
+    user_edit = user_subparsers.add_parser("edit", help="Edit a user")
+    user_edit.add_argument("email", help="The target's current email address")
+    user_edit.add_argument(
+        "--email", "-e", help="Change the user's email address to this new one."
+    )
+    user_edit_password_group = user_edit.add_mutually_exclusive_group()
+    user_edit_password_group.add_argument(
+        "--password", "-p", help="Set the user's password to this value"
+    )
+    user_edit_password_group.add_argument(
+        "--random-password",
+        action="store_true",
+        default=False,
+        help="Set the user's password to a random value.",
+    )
+    user_edit_password_group.add_argument(
+        "--password-prompt",
+        action="store_true",
+        default=False,
+        help="Prompt for the user's new password",
+    )
+    user_edit.add_argument("--quota", "-q", help="Set the user's quota in GB")
+    user_edit.set_defaults(func=handlers.handle_user_edit, func_args=True)
+
+    user_list = user_subparsers.add_parser("list", help="List users")
+    user_list.add_argument("--domain", "-d", help="List users for this domain only.")
+    user_list.set_defaults(func=handlers.handle_user_list, func_args=True)
+
+    user_delete = user_subparsers.add_parser("delete", help="Delete a user.")
+    user_delete.add_argument("email", help="The target's email address.")
+    user_delete.add_argument(
+        "--mail",
+        "-m",
+        action="store_true",
+        help="Delete the user's existing emails as well.",
+    )
+    user_delete.set_defaults(func=handlers.handle_user_delete, func_args=True)
+
+
 def get_parser():
     parser = argparse.ArgumentParser(description="Manage your mail server.")
     parser.add_argument(
@@ -110,6 +174,8 @@ def get_parser():
     add_dkim_parser(subparsers)
 
     add_domain_parser(subparsers)
+
+    add_user_parser(subparsers)
 
     return parser
 
