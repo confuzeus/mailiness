@@ -1,3 +1,5 @@
+import secrets
+from getpass import getpass
 import shutil
 import tempfile
 from argparse import Namespace
@@ -85,16 +87,58 @@ def handle_domain_list(args: Namespace):
 
 
 def handle_user_add(args: Namespace):
-    print("Added user")
+    user_repo = repo.UserRepository()
+    password = args.password
+
+    if password is None:
+        if args.random_password:
+            password = secrets.token_urlsafe(16)
+        else:
+            password = getpass()
+    tbl = user_repo.create(email=args.email, password=password, quota=args.quota)
+    console.print(tbl)
 
 
 def handle_user_edit(args: Namespace):
-    print("Editing user")
+    user_repo = repo.UserRepository()
+    password = args.password
+    if password is None:
+        if args.random_password:
+            password = secrets.token_urlsafe(16)
+        else:
+            password = getpass()
+
+    user_repo.edit(
+        email=args.email, new_email=args.new_email, password=password, quota=args.quota
+    )
+    console.print(f"User {args.email} updated.")
 
 
 def handle_user_list(args: Namespace):
-    print("Listing users")
+    user_repo = repo.UserRepository()
+    tbl = user_repo.index(domain=args.domain)
+    console.print(tbl)
 
 
 def handle_user_delete(args: Namespace):
-    print("Deleting user")
+    user_repo = repo.UserRepository()
+    user_repo.delete(email=args.email)
+
+    console.print(f"User {args.email} was deleted.")
+
+    if args.mail:
+
+        user, domain = args.email.split('@')
+
+        if args.debug:
+            vmail_directory = Path(tempfile.mkdtemp())
+        else:
+            vmail_directory = Path(settings.VMAIL_DIRECTORY)
+
+        vmail_domain_directory = vmail_directory / domain
+
+        user_vmail_directory = vmail_domain_directory / user
+
+        shutil.rmtree(user_vmail_directory)
+
+        console.print("User's mailbox deleted.")
