@@ -5,7 +5,7 @@ from unittest import TestCase
 from rich.table import Table
 
 from mailiness import settings
-from mailiness.repo import DomainRepository
+from mailiness.repo import DomainRepository, UserRepository
 
 
 class DomainRepositoryTest(TestCase):
@@ -61,6 +61,41 @@ class DomainRepositoryTest(TestCase):
         self.repo.delete(name)
         domains = self.repo.index(pretty=False)
         self.assertEqual(len(domains["rows"]), 0)
+
+class UserRepositoryTest(TestCase):
+
+    def setUp(self):
+        db_conn = sqlite3.connect(":memory:")
+        self.repo = UserRepository(conn=db_conn)
+        self.repo.cursor.execute(
+            f"CREATE TABLE {settings.DOMAINS_TABLE_NAME}(name TEXT)"
+        )
+        self.repo.cursor.execute(
+            f"CREATE TABLE {settings.USERS_TABLE_NAME}(domain_id INTEGER, email TEXT, password TEXT, quota TEXT, FOREIGN KEY(domain_id) REFERENCES {settings.DOMAINS_TABLE_NAME}(rowid))"
+        )
+
+    def test_index_return_data_in_correct_format(self):
+        for data in (
+            ("smith.com", (1, "john@smith.com", "secret", 2)),
+            ("doe.com", (2, "jane@doe.com", "alsosecret", 3)),
+        ):
+            domain, user_data = data
+
+            self.repo.cursor.execute(
+                f"INSERT INTO {settings.DOMAINS_TABLE_NAME} VALUES (?)", [domain]
+            )
+            self.repo.db_conn.commit()
+            self.repo.cursor.execute(
+                f"INSERT INTO {settings.USERS_TABLE_NAME} VALUES (?, ?, ?, ?)", user_data
+            )
+
+        data = self.repo.index(pretty=False)
+        self.assertIn("john@smith.com", data['rows'][0])
+        self.assertIn("jane@doe.com", data['rows'][1])
+
+        data = self.repo.index(domain="smith.com", pretty=False)
+        self.assertIn("john@smith.com", data['rows'][0])
+        self.assertEqual(len(data['rows']), 1)
 
 
 if __name__ == "__main__":
