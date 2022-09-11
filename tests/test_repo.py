@@ -1,3 +1,4 @@
+import bcrypt
 import sqlite3
 import unittest
 from unittest import TestCase
@@ -62,8 +63,8 @@ class DomainRepositoryTest(TestCase):
         domains = self.repo.index(pretty=False)
         self.assertEqual(len(domains["rows"]), 0)
 
-class UserRepositoryTest(TestCase):
 
+class UserRepositoryTest(TestCase):
     def setUp(self):
         db_conn = sqlite3.connect(":memory:")
         self.repo = UserRepository(conn=db_conn)
@@ -73,6 +74,7 @@ class UserRepositoryTest(TestCase):
         self.repo.cursor.execute(
             f"CREATE TABLE {settings.USERS_TABLE_NAME}(domain_id INTEGER, email TEXT, password TEXT, quota TEXT, FOREIGN KEY(domain_id) REFERENCES {settings.DOMAINS_TABLE_NAME}(rowid))"
         )
+        self.domain_repo = DomainRepository(conn=db_conn)
 
     def test_index_return_data_in_correct_format(self):
         for data in (
@@ -81,22 +83,40 @@ class UserRepositoryTest(TestCase):
         ):
             domain, user_data = data
 
+            self.domain_repo.create(domain)
             self.repo.cursor.execute(
-                f"INSERT INTO {settings.DOMAINS_TABLE_NAME} VALUES (?)", [domain]
+                f"INSERT INTO {settings.USERS_TABLE_NAME} VALUES (?, ?, ?, ?)",
+                user_data,
             )
             self.repo.db_conn.commit()
-            self.repo.cursor.execute(
-                f"INSERT INTO {settings.USERS_TABLE_NAME} VALUES (?, ?, ?, ?)", user_data
-            )
 
         data = self.repo.index(pretty=False)
-        self.assertIn("john@smith.com", data['rows'][0])
-        self.assertIn("jane@doe.com", data['rows'][1])
+        self.assertIn("john@smith.com", data["rows"][0])
+        self.assertIn("jane@doe.com", data["rows"][1])
 
         data = self.repo.index(domain="smith.com", pretty=False)
-        self.assertIn("john@smith.com", data['rows'][0])
-        self.assertEqual(len(data['rows']), 1)
+        self.assertIn("john@smith.com", data["rows"][0])
+        self.assertEqual(len(data["rows"]), 1)
 
+    def test_create_add_to_db_and_returns_correct_format(self):
+        data = self.repo.index(pretty=False)
+        self.assertEqual(len(data["rows"]), 0)
+
+        self.domain_repo.create("smith.com")
+
+        data = self.repo.create("john@smith.com", "secret", 2, pretty=False)
+        self.assertEqual(int(data['rows'][0][2]), 2_000_000_000)
+
+        data = self.repo.index(pretty=False)
+        self.assertIn("john@smith.com", data["rows"][0])
+
+        result = self.repo.cursor.execute(
+            f"SELECT password FROM {settings.USERS_TABLE_NAME} WHERE email='john@smith.com'"
+        )
+        row = result.fetchone()
+        _, password_hash = row[0].split(settings.PASSWORD_HASH_PREFIX)
+        self.assertNotEqual(password_hash, "secret")
+        self.assertTrue(bcrypt.checkpw(b"secret", password_hash.encode('utf-8')))
 
 if __name__ == "__main__":
     unittest.main()

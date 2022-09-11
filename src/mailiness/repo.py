@@ -1,3 +1,4 @@
+import bcrypt
 from typing import Optional
 import sqlite3
 from typing import Union
@@ -109,4 +110,50 @@ class UserRepository(BaseRepository):
         result = self.cursor.execute(stmt)
 
         self.data["rows"] = result.fetchall()
+        return self._prettify_data() if pretty else self.data
+
+    def _hash_password(self, password: str) -> str:
+        h = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        s = h.decode('utf-8')
+
+        if settings.INSERT_PASSWORD_HASH_PREFIX:
+            s = settings.PASSWORD_HASH_PREFIX + s
+
+        return s
+
+    def _get_domain_id_from_email(self, email: str) -> int:
+        _, domain = email.split('@')
+        result = self.cursor.execute(
+            f"SELECT rowid FROM {settings.DOMAINS_TABLE_NAME} WHERE name=?", [domain]
+        )
+        row = result.fetchone()
+        if len(row) < 1:
+            raise Exception(f"Domain {domain} doesn't exist.")
+
+        return int(row[0])
+
+    def _quota_gb_to_bytes(self, quota: int) -> int:
+        """
+        Dovecot requires quota in bytes.
+
+        Normalize it here.
+        """
+        return quota * 1_000_000_000
+
+    def create(self, email: str, password: str, quota: int, pretty=True) -> Union[dict, Table]:
+        """
+        Create a new user using the parameters.
+
+        Password will be hashed before being being stored.
+        """
+        hashed_password = self._hash_password(password)
+        domain_id = self._get_domain_id_from_email(email)
+        quota_bytes = self._quota_gb_to_bytes(quota)
+        result = self.cursor.execute(
+            f"INSERT INTO {settings.USERS_TABLE_NAME} VALUES (?,?,?,?) RETURNING rowid, email, quota", [domain_id, email, hashed_password, quota_bytes]
+        )
+        self.data['rows'] = result.fetchall()
+        self.db_conn.commit()
+
         return self._prettify_data() if pretty else self.data

@@ -6,6 +6,10 @@ DOMAINS_TABLE_NAME = "domains"
 
 USERS_TABLE_NAME = "users"
 
+INSERT_PASSWORD_HASH_PREFIX = True
+
+PASSWORD_HASH_PREFIX = "{BLF-CRYPT}"
+
 DKIM_PRIVATE_KEY_DIRECTORY = "/var/lib/rspamd/dkim"
 
 DKIM_MAPS_PATH = "/etc/rspamd/dkim_selectors.map"
