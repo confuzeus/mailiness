@@ -151,6 +151,17 @@ class UserRepositoryTest(TestCase):
         row = result.fetchone()
         self.assertEqual(len(row), 1)
 
+    def test_delete(self):
+        self.domain_repo.create("smith.com")
+        self.repo.create("john@smith.com", "secret", 2)
+
+        data = self.repo.index(pretty=False)
+        self.assertEqual(len(data['rows']), 1)
+
+        self.repo.delete("john@smith.com")
+        data = self.repo.index(pretty=False)
+        self.assertEqual(len(data['rows']), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

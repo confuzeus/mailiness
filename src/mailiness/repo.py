@@ -191,3 +191,9 @@ class UserRepository(BaseRepository):
 
         self.cursor.execute(stmt, *[bindings])
         self.db_conn.commit()
+
+    def delete(self, email: str):
+        self.cursor.execute(
+            f"DELETE FROM {settings.USERS_TABLE_NAME} WHERE email=?", [email]
+        )
+        self.db_conn.commit()
