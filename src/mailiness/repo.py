@@ -197,3 +197,37 @@ class UserRepository(BaseRepository):
             f"DELETE FROM {settings.USERS_TABLE_NAME} WHERE email=?", [email]
         )
         self.db_conn.commit()
+
+
+class AliasRepository(BaseRepository):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.data["headers"] = ("ID (Row id)", "From", "To")
+
+    def _get_domain_id(self, domain: str) -> int:
+        result = self.cursor.execute(
+            f"SELECT rowid FROM {settings.DOMAINS_TABLE_NAME} WHERE name=?", [domain]
+        )
+        row = result.fetchone()
+        if len(row) < 1:
+            raise Exception(f"Domain {domain} doesn't exist.")
+
+        return int(row[0])
+
+    def index(self, domain: Optional[str] = None, pretty=True) -> Union[dict, Table]:
+        """
+        List all aliases.
+
+        If domain is provided, filter the list to show only this domain's aliases.
+        """
+        stmt = (
+            f"SELECT rowid, from_address, to_address FROM {settings.ALIASES_TABLE_NAME}"
+        )
+        if domain:
+            domain_id = self._get_domain_id(domain)
+            stmt += f" WHERE domain_id={domain_id}"
+
+        result = self.cursor.execute(stmt)
+        self.data["rows"] = result.fetchall()
+
+        return self._prettify_data() if pretty else self.data

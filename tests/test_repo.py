@@ -6,7 +6,7 @@ from unittest import TestCase
 from rich.table import Table
 
 from mailiness import settings
-from mailiness.repo import DomainRepository, UserRepository
+from mailiness.repo import DomainRepository, UserRepository, AliasRepository
 
 
 class DomainRepositoryTest(TestCase):
@@ -105,7 +105,7 @@ class UserRepositoryTest(TestCase):
         self.domain_repo.create("smith.com")
 
         data = self.repo.create("john@smith.com", "secret", 2, pretty=False)
-        self.assertEqual(int(data['rows'][0][2]), 2_000_000_000)
+        self.assertEqual(int(data["rows"][0][2]), 2_000_000_000)
 
         data = self.repo.index(pretty=False)
         self.assertIn("john@smith.com", data["rows"][0])
@@ -116,7 +116,7 @@ class UserRepositoryTest(TestCase):
         row = result.fetchone()
         _, password_hash = row[0].split(settings.PASSWORD_HASH_PREFIX)
         self.assertNotEqual(password_hash, "secret")
-        self.assertTrue(bcrypt.checkpw(b"secret", password_hash.encode('utf-8')))
+        self.assertTrue(bcrypt.checkpw(b"secret", password_hash.encode("utf-8")))
 
     def test_edit_updates_data_in_db(self):
         self.domain_repo.create("smith.com")
@@ -130,8 +130,8 @@ class UserRepositoryTest(TestCase):
         )
         row = result.fetchone()
         _, password_hash = row[0].split(settings.PASSWORD_HASH_PREFIX)
-        self.assertFalse(bcrypt.checkpw(b'secret', password_hash.encode('utf-8')))
-        self.assertTrue(bcrypt.checkpw(b'password', password_hash.encode('utf-8')))
+        self.assertFalse(bcrypt.checkpw(b"secret", password_hash.encode("utf-8")))
+        self.assertTrue(bcrypt.checkpw(b"password", password_hash.encode("utf-8")))
 
         self.repo.edit(target, quota=1)
 
@@ -156,11 +156,62 @@ class UserRepositoryTest(TestCase):
         self.repo.create("john@smith.com", "secret", 2)
 
         data = self.repo.index(pretty=False)
-        self.assertEqual(len(data['rows']), 1)
+        self.assertEqual(len(data["rows"]), 1)
 
         self.repo.delete("john@smith.com")
         data = self.repo.index(pretty=False)
-        self.assertEqual(len(data['rows']), 0)
+        self.assertEqual(len(data["rows"]), 0)
+
+
+class AliasRepositoryTest(TestCase):
+    def setUp(self):
+        db_conn = sqlite3.connect(":memory:")
+        self.db_conn = db_conn
+        self.repo = AliasRepository(conn=db_conn)
+        self.repo.cursor.execute(
+            f"CREATE TABLE {settings.DOMAINS_TABLE_NAME}(name TEXT)"
+        )
+        self.repo.cursor.execute(
+            f"CREATE TABLE {settings.ALIASES_TABLE_NAME}(domain_id INTEGER, from_address TEXT, to_address TEXT, FOREIGN KEY(domain_id) REFERENCES domains(rowid))"
+        )
+        self.domain_repo = DomainRepository(conn=db_conn)
+        self.domain_name = "smith.com"
+        domain_data = self.domain_repo.create(self.domain_name, pretty=False)
+        self.domain_id = domain_data["rows"][0][0]
+
+    def test_index_returns_data_in_correct_format(self):
+        from_address = "admin@smith.com"
+        to_address = "john@doe.com"
+        self.repo.cursor.execute(
+            f"INSERT INTO {settings.ALIASES_TABLE_NAME} VALUES (?, ?, ?)",
+            [
+                self.domain_id,
+                from_address,
+                to_address,
+            ],
+        )
+        self.db_conn.commit()
+
+        data = self.repo.index(pretty=False)
+        self.assertIn(from_address, data["rows"][0])
+
+        domain_data = self.domain_repo.create("gmail.com", pretty=False)
+        domain_id = domain_data["rows"][0][0]
+
+        self.repo.cursor.execute(
+            f"INSERT INTO {settings.ALIASES_TABLE_NAME} VALUEs (?,?,?)",
+            [
+                domain_id,
+                "john@gmail.com",
+                "john@smith.com",
+            ],
+        )
+
+        self.db_conn.commit()
+        data = self.repo.index(domain="gmail.com", pretty=False)
+
+        self.assertEqual(len(data['rows']), 1)
+        self.assertIn("john@gmail.com", data['rows'][0])
 
 
 if __name__ == "__main__":
