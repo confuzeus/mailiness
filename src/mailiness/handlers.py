@@ -128,7 +128,7 @@ def handle_user_delete(args: Namespace):
 
     if args.mail:
 
-        user, domain = args.email.split('@')
+        user, domain = args.email.split("@")
 
         if args.debug:
             vmail_directory = Path(tempfile.mkdtemp())
@@ -142,3 +142,18 @@ def handle_user_delete(args: Namespace):
         shutil.rmtree(user_vmail_directory)
 
         console.print("User's mailbox deleted.")
+
+
+def handle_alias_add(args: Namespace):
+    print("Added alias.")
+
+
+def handle_alias_list(args: Namespace):
+    print("List of aliases")
+
+
+def handle_alias_edit(args: Namespace):
+    print("Edited the alias")
+
+def handle_alias_delete(args: Namespace):
+    print("Delete alias")
