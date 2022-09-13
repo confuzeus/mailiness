@@ -1,12 +1,12 @@
-import bcrypt
 import sqlite3
 import unittest
 from unittest import TestCase
 
+import bcrypt
 from rich.table import Table
 
 from mailiness import settings
-from mailiness.repo import DomainRepository, UserRepository, AliasRepository
+from mailiness.repo import AliasRepository, DomainRepository, UserRepository
 
 
 class DomainRepositoryTest(TestCase):
@@ -238,6 +238,9 @@ class AliasRepositoryTest(TestCase):
         data = self.repo.index(pretty=False)
         self.assertIn(new_from, data["rows"][0])
 
+        data = self.repo.edit(new_from, new_to, pretty=False)
+        self.assertIn(new_to, data["rows"][0])
+
     def test_delete_removes_from_db(self):
         from_address = "admin@" + self.domain_name
         to_address = "john@" + self.domain_name
@@ -245,11 +248,12 @@ class AliasRepositoryTest(TestCase):
         self.repo.create(from_address, to_address)
 
         data = self.repo.index(pretty=False)
-        self.assertIn(from_address, data['rows'][0])
+        self.assertIn(from_address, data["rows"][0])
 
         self.repo.delete(from_address)
         data = self.repo.index(pretty=False)
-        self.assertEqual(len(data['rows']), 0)
+        self.assertEqual(len(data["rows"]), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

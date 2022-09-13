@@ -1,8 +1,7 @@
-import bcrypt
-from typing import Optional
 import sqlite3
-from typing import Union
+from typing import Optional, Union
 
+import bcrypt
 from rich.table import Table
 
 from . import settings

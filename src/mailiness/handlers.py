@@ -1,8 +1,8 @@
 import secrets
-from getpass import getpass
 import shutil
 import tempfile
 from argparse import Namespace
+from getpass import getpass
 from pathlib import Path
 
 from rich.console import Console
@@ -154,6 +154,7 @@ def handle_alias_list(args: Namespace):
 
 def handle_alias_edit(args: Namespace):
     print("Edited the alias")
+
 
 def handle_alias_delete(args: Namespace):
     print("Delete alias")
