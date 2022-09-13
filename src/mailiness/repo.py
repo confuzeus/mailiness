@@ -214,6 +214,10 @@ class AliasRepository(BaseRepository):
 
         return int(row[0])
 
+    def _get_domain_id_from_email(self, email: str) -> int:
+        _, domain = email.split("@")
+        return self._get_domain_id(domain)
+
     def index(self, domain: Optional[str] = None, pretty=True) -> Union[dict, Table]:
         """
         List all aliases.
@@ -229,5 +233,20 @@ class AliasRepository(BaseRepository):
 
         result = self.cursor.execute(stmt)
         self.data["rows"] = result.fetchall()
+
+        return self._prettify_data() if pretty else self.data
+
+    def create(self, from_address: str, to_address: str, pretty=True) -> Union[dict, Table]:
+        """
+        Create a new alias pointing from from_address to to_address.
+        """
+        domain_id = self._get_domain_id_from_email(from_address)
+
+        result = self.cursor.execute(
+            f"INSERT INTO {settings.ALIASES_TABLE_NAME} VALUES (?,?,?) RETURNING rowid, from_address, to_address",
+            [domain_id, from_address, to_address],
+        )
+        self.data['rows'] = result.fetchone()
+        self.db_conn.commit()
 
         return self._prettify_data() if pretty else self.data

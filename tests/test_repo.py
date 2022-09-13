@@ -210,9 +210,18 @@ class AliasRepositoryTest(TestCase):
         self.db_conn.commit()
         data = self.repo.index(domain="gmail.com", pretty=False)
 
-        self.assertEqual(len(data['rows']), 1)
-        self.assertIn("john@gmail.com", data['rows'][0])
+        self.assertEqual(len(data["rows"]), 1)
+        self.assertIn("john@gmail.com", data["rows"][0])
 
+    def test_create_add_to_db_and_returns_correct_format(self):
+        from_address = "admin@" + self.domain_name
+        to_address = "john@" + self.domain_name
+
+        data = self.repo.create(from_address, to_address, pretty=False)
+        self.assertIn(from_address, data['rows'])
+
+        data = self.repo.index(pretty=False)
+        self.assertIn(from_address, data['rows'][0])
 
 if __name__ == "__main__":
     unittest.main()
