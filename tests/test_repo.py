@@ -238,6 +238,18 @@ class AliasRepositoryTest(TestCase):
         data = self.repo.index(pretty=False)
         self.assertIn(new_from, data["rows"][0])
 
+    def test_delete_removes_from_db(self):
+        from_address = "admin@" + self.domain_name
+        to_address = "john@" + self.domain_name
+
+        self.repo.create(from_address, to_address)
+
+        data = self.repo.index(pretty=False)
+        self.assertIn(from_address, data['rows'][0])
+
+        self.repo.delete(from_address)
+        data = self.repo.index(pretty=False)
+        self.assertEqual(len(data['rows']), 0)
 
 if __name__ == "__main__":
     unittest.main()

@@ -271,10 +271,17 @@ class AliasRepository(BaseRepository):
             placeholders.append("to_address=?")
             bindings.append(to_address)
 
-        stmt = stmt % ','.join([str(i) for i in placeholders])
+        stmt = stmt % ",".join([str(i) for i in placeholders])
         bindings.append(from_address)
         result = self.cursor.execute(stmt, bindings)
-        self.data['rows'] = result.fetchall()
+        self.data["rows"] = result.fetchall()
         self.db_conn.commit()
 
         return self._prettify_data() if pretty else self.data
+
+    def delete(self, from_address: str):
+        self.cursor.execute(
+            f"DELETE FROM {settings.ALIASES_TABLE_NAME} WHERE from_address=?",
+            [from_address],
+        )
+        self.db_conn.commit()
