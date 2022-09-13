@@ -22,11 +22,11 @@ def add_dkim_parser(parser):
         nargs="?",
     )
     dkim_keygen.add_argument(
-        "--print",
-        "-p",
+        "--quiet",
+        "-q",
         action="store_true",
-        default=True,
-        help="Print keys to stdout (default: yes)",
+        default=False,
+        help="Don't print keys to stdout.",
     )
     dkim_keygen.add_argument(
         "--save",
@@ -166,7 +166,9 @@ def add_alias_parser(parser):
     alias_list = alias_subparsers.add_parser(
         "list", help="List all addresses pointing to this address."
     )
-    alias_list.add_argument("to_address", help="The address other addresses are pointing to.")
+    alias_list.add_argument(
+        "to_address", help="The address other addresses are pointing to."
+    )
     alias_list.set_defaults(func=handlers.handle_alias_list, func_args=True)
 
     alias_edit = alias_subparsers.add_parser("edit", help="Edit an alias.")
