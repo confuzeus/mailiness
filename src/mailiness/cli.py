@@ -170,7 +170,8 @@ def add_alias_parser(parser):
     alias_list.set_defaults(func=handlers.handle_alias_list, func_args=True)
 
     alias_edit = alias_subparsers.add_parser("edit", help="Edit an alias.")
-    alias_edit.add_argument("--from", "-f", help="Change the from address to this one.")
+    alias_edit.add_argument("from", help="The target from_address.")
+    alias_edit.add_argument("--new-from", "-f", help="Change the from address to this one.")
     alias_edit.add_argument("--to", "-t", help="Change the to address to this one.")
     alias_edit.set_defaults(func=handlers.handle_alias_edit, func_args=True)
 
