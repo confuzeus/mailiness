@@ -159,18 +159,18 @@ def add_alias_parser(parser):
     alias_subparsers = alias_parser.add_subparsers()
 
     alias_add = alias_subparsers.add_parser("add", help="Add an alias")
-    alias_add.add_argument("from", help="From address.")
-    alias_add.add_argument("to", help="To address.")
+    alias_add.add_argument("from_address", help="From address.")
+    alias_add.add_argument("to_address", help="To address.")
     alias_add.set_defaults(func=handlers.handle_alias_add, func_args=True)
 
     alias_list = alias_subparsers.add_parser(
         "list", help="List all addresses pointing to this address."
     )
-    alias_list.add_argument("to", help="The address other addresses are pointing to.")
+    alias_list.add_argument("to_address", help="The address other addresses are pointing to.")
     alias_list.set_defaults(func=handlers.handle_alias_list, func_args=True)
 
     alias_edit = alias_subparsers.add_parser("edit", help="Edit an alias.")
-    alias_edit.add_argument("from", help="The target from_address.")
+    alias_edit.add_argument("from_address", help="The target from_address.")
     alias_edit.add_argument(
         "--new-from", "-f", help="Change the from address to this one."
     )
@@ -178,7 +178,7 @@ def add_alias_parser(parser):
     alias_edit.set_defaults(func=handlers.handle_alias_edit, func_args=True)
 
     alias_delete = alias_subparsers.add_parser("delete", help="Delete an alias")
-    alias_delete.add_argument("from", help="The from address.")
+    alias_delete.add_argument("from_address", help="The from address.")
     alias_delete.set_defaults(func=handlers.handle_alias_delete, func_args=True)
 
 
