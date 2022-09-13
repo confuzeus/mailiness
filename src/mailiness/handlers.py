@@ -145,16 +145,23 @@ def handle_user_delete(args: Namespace):
 
 
 def handle_alias_add(args: Namespace):
-    print("Added alias.")
+    alias_repo = repo.AliasRepository()
+    tbl = alias_repo.create(args.from_address, args.to_address)
+    console.print(tbl)
 
 
 def handle_alias_list(args: Namespace):
-    print("List of aliases")
+    alias_repo = repo.AliasRepository()
+    tbl = alias_repo.index(args.to_address)
+    console.print(tbl)
 
 
 def handle_alias_edit(args: Namespace):
-    print("Edited the alias")
+    alias_repo = repo.AliasRepository()
+    tbl = alias_repo.edit(args.from_address, args.new_from, args.to)
+    console.print(tbl)
 
 
 def handle_alias_delete(args: Namespace):
-    print("Delete alias")
+    alias_repo = repo.AliasRepository()
+    alias_repo.delete(args.from_address)
