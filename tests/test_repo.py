@@ -218,10 +218,26 @@ class AliasRepositoryTest(TestCase):
         to_address = "john@" + self.domain_name
 
         data = self.repo.create(from_address, to_address, pretty=False)
-        self.assertIn(from_address, data['rows'])
+        self.assertIn(from_address, data["rows"][0])
 
         data = self.repo.index(pretty=False)
-        self.assertIn(from_address, data['rows'][0])
+        self.assertIn(from_address, data["rows"][0])
+
+    def test_edit_updates_db_and_returns_correct_format(self):
+        from_address = "admin@" + self.domain_name
+        new_from = "master@" + self.domain_name
+        to_address = "john@" + self.domain_name
+        new_to = "joe@" + self.domain_name
+
+        self.repo.create(from_address, to_address)
+
+        data = self.repo.edit(from_address, new_from=new_from, pretty=False)
+
+        self.assertIn(new_from, data["rows"][0])
+
+        data = self.repo.index(pretty=False)
+        self.assertIn(new_from, data["rows"][0])
+
 
 if __name__ == "__main__":
     unittest.main()

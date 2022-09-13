@@ -236,7 +236,9 @@ class AliasRepository(BaseRepository):
 
         return self._prettify_data() if pretty else self.data
 
-    def create(self, from_address: str, to_address: str, pretty=True) -> Union[dict, Table]:
+    def create(
+        self, from_address: str, to_address: str, pretty=True
+    ) -> Union[dict, Table]:
         """
         Create a new alias pointing from from_address to to_address.
         """
@@ -246,7 +248,33 @@ class AliasRepository(BaseRepository):
             f"INSERT INTO {settings.ALIASES_TABLE_NAME} VALUES (?,?,?) RETURNING rowid, from_address, to_address",
             [domain_id, from_address, to_address],
         )
-        self.data['rows'] = result.fetchone()
+        self.data["rows"] = result.fetchall()
+        self.db_conn.commit()
+
+        return self._prettify_data() if pretty else self.data
+
+    def edit(
+        self,
+        from_address: str,
+        new_from: Optional[str] = None,
+        to_address: Optional[str] = None,
+        pretty=True,
+    ) -> Union[dict, Table]:
+        stmt = f"UPDATE {settings.ALIASES_TABLE_NAME} SET %s WHERE from_address=? RETURNING rowid, from_address, to_address"
+        placeholders = []
+        bindings = []
+        if from_address:
+            placeholders.append("from_address=?")
+            bindings.append(new_from)
+
+        if to_address:
+            placeholders.append("to_address=?")
+            bindings.append(to_address)
+
+        stmt = stmt % ','.join([str(i) for i in placeholders])
+        bindings.append(from_address)
+        result = self.cursor.execute(stmt, bindings)
+        self.data['rows'] = result.fetchall()
         self.db_conn.commit()
 
         return self._prettify_data() if pretty else self.data
