@@ -17,7 +17,7 @@ def handle_dkim_keygen(args: Namespace):
 
     print(key.private_key_as_pem())
 
-    if args.print:
+    if not args.quiet:
         print(key.dns_txt_record())
 
     if args.save:
