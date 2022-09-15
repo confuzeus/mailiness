@@ -36,6 +36,10 @@ def add_dkim_parser(parser):
     )
     dkim_keygen.set_defaults(func=handlers.handle_dkim_keygen, func_args=True)
 
+    dkim_show = dkim_subparsers.add_parser("show", help="display a domain's DKIM key")
+    dkim_show.add_argument("domain", help="The domain whose key to show")
+    dkim_show.set_defaults(func=handlers.handle_dkim_show, func_args=True)
+
 
 def add_domain_parser(parser):
     domain_parser = parser.add_parser("domain", help="domain commands")

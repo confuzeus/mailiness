@@ -23,6 +23,11 @@ def handle_dkim_keygen(args: Namespace):
     if args.save:
         key.save_private_key()
 
+def handle_dkim_show(args: Namespace):
+    key = dkim.DKIM(domain=args.domain)
+    print(key.private_key_as_pem())
+    print(key.dns_txt_record())
+
 
 def handle_domain_add(args: Namespace):
     domain_repo = repo.DomainRepository()
