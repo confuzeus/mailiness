@@ -104,6 +104,8 @@ class DKIM:
 
         key_file.unlink(missing_ok=True)
 
+        self._run_system_hooks()
+
     def load_from_dkim_map_file(self) -> dict:
         dkim_map_file = Path(self.dkim_maps_path)
 
@@ -120,9 +122,6 @@ class DKIM:
         with dest.open("w", encoding="utf-8") as fp:
             fp.write(self.private_key_as_pem())
 
-        if not debug:
-            shutil.chown(str(dest), user="_rspamd", group="_rspamd")
-
         dkim_map = self.load_from_dkim_map_file()
 
         dkim_map[self.domain] = self.selector
@@ -130,4 +129,9 @@ class DKIM:
         self.write_dkim_map(dkim_map)
 
         if not debug:
-            subprocess.run(["systemctl", "reload", "rspamd"])
+            self._run_system_hooks(dest)
+
+    def _run_system_hooks(self, keyfile=None):
+        subprocess.run(["systemctl", "reload", "rspamd"])
+        if keyfile:
+            shutil.chown(str(keyfile), user="_rspamd", group="_rspamd")
