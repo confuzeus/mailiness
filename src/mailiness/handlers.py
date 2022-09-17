@@ -13,7 +13,7 @@ console = Console()
 
 
 def handle_dkim_keygen(args: Namespace):
-    key = dkim.DKIM(domain=args.domain, selector=args.selector)
+    key = dkim.DKIM(domain=args.name, selector=args.selector)
 
     print(key.private_key_as_pem())
 
@@ -25,7 +25,7 @@ def handle_dkim_keygen(args: Namespace):
 
 
 def handle_dkim_show(args: Namespace):
-    key = dkim.DKIM(domain=args.domain)
+    key = dkim.DKIM(domain=args.name)
     print(key.private_key_as_pem())
     print(key.dns_txt_record())
 
@@ -78,13 +78,13 @@ def handle_domain_delete(args: Namespace):
             print("Mailboxes deleted.")
 
         if args.all:
-            _delete_dkim_key(args.domain)
-            _delete_mailbox_directory(args.domain)
+            _delete_dkim_key(args.name)
+            _delete_mailbox_directory(args.name)
         else:
             if args.dkim:
-                _delete_dkim_key(args.domain)
+                _delete_dkim_key(args.name)
             elif args.mailbox:
-                _delete_mailbox_directory()
+                _delete_mailbox_directory(args.name)
     else:
         console.print(f"{args.name} not deleted.")
 
@@ -125,7 +125,7 @@ def handle_user_edit(args: Namespace):
 
 def handle_user_list(args: Namespace):
     user_repo = repo.UserRepository()
-    tbl = user_repo.index(domain=args.domain)
+    tbl = user_repo.index(domain=args.name)
     console.print(tbl)
 
 
