@@ -88,6 +88,13 @@ def add_domain_parser(parser):
         default=False,
         help="Delete domain and mailboxes, DKIM keys, etc.",
     )
+    domain_delete.add_argument(
+        "--yes",
+        "-y",
+        action="store_true",
+        default=False,
+        help="Assume yes on all choices.",
+    )
     domain_delete.set_defaults(func=handlers.handle_domain_delete, func_args=True)
 
     domain_list = domain_subparsers.add_parser("list", help="List domain names")

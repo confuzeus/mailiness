@@ -23,6 +23,7 @@ def handle_dkim_keygen(args: Namespace):
     if args.save:
         key.save_private_key()
 
+
 def handle_dkim_show(args: Namespace):
     key = dkim.DKIM(domain=args.domain)
     print(key.private_key_as_pem())
@@ -50,7 +51,10 @@ def handle_domain_edit_name(args: Namespace):
 
 def handle_domain_delete(args: Namespace):
     domain_repo = repo.DomainRepository()
-    answer = input(f"Are you sure you want to delete {args.name}? (y/n)")
+    if args.yes:
+        answer = "y"
+    else:
+        answer = input(f"Are you sure you want to delete {args.name}? (y/n)")
 
     while answer != "y" and answer != "n":
         answer = input(f"Are you sure you want to delete {args.name}? (y/n)")
