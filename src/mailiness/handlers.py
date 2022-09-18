@@ -114,7 +114,7 @@ def handle_user_edit(args: Namespace):
     if password is None:
         if args.random_password:
             password = secrets.token_urlsafe(16)
-        else:
+        elif args.password_prompt:
             password = getpass()
 
     user_repo.edit(
