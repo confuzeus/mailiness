@@ -145,7 +145,7 @@ def add_user_parser(parser):
         default=False,
         help="Prompt for the user's new password",
     )
-    user_edit.add_argument("--quota", "-q", help="Set the user's quota in GB")
+    user_edit.add_argument("--quota", "-q", type=int, help="Set the user's quota in GB")
     user_edit.set_defaults(func=handlers.handle_user_edit, func_args=True)
 
     user_list = user_subparsers.add_parser("list", help="List users")
