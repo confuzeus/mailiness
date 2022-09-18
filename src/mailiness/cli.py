@@ -108,6 +108,7 @@ def add_user_parser(parser):
 
     user_add = user_subparsers.add_parser("add", help="Add a user")
     user_add.add_argument("email", type=str, help="john@smith.com")
+    user_add.add_argument("quota", help="The user's disk quota in GB.", type=int)
     user_add_password_group = user_add.add_mutually_exclusive_group()
     user_add_password_group.add_argument(
         "password",
@@ -120,9 +121,6 @@ def add_user_parser(parser):
         action="store_true",
         default=False,
         help="Set the user's password to a random value.",
-    )
-    user_add.add_argument(
-        "--quota", "-q", help="The user's disk quota in GB.", type=str
     )
     user_add.set_defaults(func=handlers.handle_user_add, func_args=True)
 
