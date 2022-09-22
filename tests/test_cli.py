@@ -1,9 +1,10 @@
 import sqlite3
 import tempfile
 import unittest
-from importlib.resources import path
 from pathlib import Path
 from unittest.mock import patch
+
+import bcrypt
 
 from mailiness import cli, dkim, repo, settings
 
@@ -195,6 +196,120 @@ class DomainInterfaceTest(CLITestCase):
 
             dkim_map = key.load_from_dkim_map_file()
             self.assertNotIn(self.domain_name, dkim_map.keys())
+
+
+class UserInterfaceTestCase(CLITestCase):
+    def setUp(self):
+        super().setUp()
+        self.domain_name = "smith.com"
+        self.domain_repo = repo.DomainRepository(conn=self.db_conn)
+        self.domain_repo.create(self.domain_name)
+        self.user_repo = repo.UserRepository(conn=self.db_conn)
+
+    def test_user_add_adds_user_to_db(self):
+        email = "john@" + self.domain_name
+        password = "secret"
+        quota = 2
+        args = [
+            "user",
+            "add",
+            email,
+            str(quota),
+            password,
+        ]
+
+        with patch("mailiness.handlers.repo.UserRepository") as user_repo_class:
+
+            user_repo_class.return_value = self.user_repo
+
+            cli.main(args)
+
+            data = self.user_repo.index(pretty=False)
+
+            self.assertIn(email, data["rows"][0])
+
+    def test_user_add_random_password_saves_random_password(self):
+
+        email = "john@" + self.domain_name
+
+        password = "secret"
+
+        quota = 2
+
+        args = ["user", "add", email, str(quota), "--random-password"]
+
+        with patch("mailiness.handlers.secrets") as mock_secrets, patch(
+            "mailiness.handlers.repo.UserRepository"
+        ) as user_repo_class:
+
+            mock_secrets.token_urlsafe.return_value = password
+            user_repo_class.return_value = self.user_repo
+
+            cli.main(args)
+
+            result = self.cursor.execute(
+                f"SELECT password FROM {settings.USERS_TABLE_NAME} WHERE email=?",
+                [email],
+            )
+
+            row = result.fetchone()
+
+            _, hashed_pw = row[0].split(settings.PASSWORD_HASH_PREFIX)
+
+            self.assertTrue(
+                bcrypt.checkpw(password.encode("utf-8"), hashed_pw.encode("utf-8"))
+            )
+
+    def test_user_add_password_random_password_mutually_exclusive(self):
+        email = "john@" + self.domain_name
+        password = "secret"
+        quota = 2
+        args = ["user", "add", email, str(quota), password, "--random-password"]
+
+        with self.assertRaises(SystemExit):
+            cli.main(args)
+
+    def test_user_edit_email_changes_email_in_db(self):
+
+        email = "john@" + self.domain_name
+        new_email = "joe@" + self.domain_name
+        password = "secret"
+        quota = 2
+        args = ["user", "edit", email, "--new-email", new_email]
+
+        self.user_repo.create(email, password, quota)
+
+        with patch("mailiness.handlers.repo.UserRepository") as user_repo_class:
+
+            user_repo_class.return_value = self.user_repo
+
+            cli.main(args)
+
+            data = self.user_repo.index(pretty=False)
+
+            self.assertIn(new_email, data["rows"][0])
+
+    def test_user_edit_password_changes_password_in_db(self):
+        email = "john@" + self.domain_name
+        password = "secret"
+        new_password = "alsosecret"
+
+        self.user_repo.create(email, password, 2)
+
+        args = ["user", "edit", email, "--password", new_password]
+
+        with patch("mailiness.handlers.repo.UserRepository") as user_repo_class:
+
+            user_repo_class.return_value = self.user_repo
+
+            cli.main(args)
+
+            result = self.cursor.execute(
+                f"SELECT password FROM {settings.USERS_TABLE_NAME} WHERE email=?", [email]
+            )
+
+            _, password_hash = result.fetchone()[0].split(settings.PASSWORD_HASH_PREFIX)
+            self.assertTrue(bcrypt.checkpw(new_password.encode('utf-8'), password_hash.encode('utf-8')))
 
 
 if __name__ == "__main__":
