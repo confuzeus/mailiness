@@ -40,6 +40,7 @@ To view help for subcommands, simply add *-h* at the end.
    :caption: Contents:
 
    server-assumptions
+   commands
 
 
 
