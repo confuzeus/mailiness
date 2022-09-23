@@ -39,8 +39,9 @@ dev = [
 mailiness = "mailiness.cli:main"
 
 [project.urls]
-"Homepage" = "https://github.com/confuzeus/simple-pypackage"
-"Bug Tracker" = "https://github.com/confuzeus/simple-pypackage/issues"
+"Homepage" = "https://github.com/confuzeus/mailiness"
+"Bug Tracker" = "https://github.com/confuzeus/mailiness/issues"
+"Documentation" = "http://mailiness.readthedocs.io/"
 
 [tool.hatch.version]
 path = "src/mailiness/__init__.py"
