@@ -23,7 +23,7 @@ publish-test:
 	hatch publish -r testpypi
 
 publish:
-	hatch publish -r pypi
+	hatch publish
 
 release: build publish
 
