@@ -9,7 +9,7 @@
 project = 'Mailiness'
 copyright = '2022, Josh Michael Karamuth'
 author = 'Josh Michael Karamuth'
-release = '0.0.2'
+release = '0.1.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
