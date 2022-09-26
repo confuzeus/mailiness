@@ -1,20 +1,55 @@
-VMAIL_DIRECTORY = "/var/vmail"
+from pathlib import Path
+from typing import Optional
+import os
+import configparser
 
-DB_CONNECTION_STRING = "/var/local/mailserver.db"
+def get_default_config() -> configparser.ConfigParser:
+    config = configparser.ConfigParser()
+    config["mail"] = {
+        "vmail_directory": "/var/vmail",
+    }
+    config["db"] = {
+        "connection_string": "/var/local/mailserver.db",
+        "domains_table_name": "domains",
+        "users_table_name": "users",
+        "aliases_table_name": "aliases",
+    }
+    config["users"] = {
+        "insert_password_hash_prefix": True,
+        "password_hash_prefix": "{BLF-CRYPT}",
+    }
+    config["spam"] = {
+        "dkim_private_key_directory": "/var/lib/rspamd/dkim",
+        "dkim_maps_path": "/etc/rspamd/dkim_selectors.map",
+    }
+    return config
 
-DOMAINS_TABLE_NAME = "domains"
 
-USERS_TABLE_NAME = "users"
+def write_default_config(
+    path: Path
+) -> configparser.ConfigParser:
+    config = get_default_config()
+    with path.open("w", encoding="utf-8") as fp:
+        config.write(fp)
+    return config
 
-ALIASES_TABLE_NAME = "aliases"
 
-INSERT_PASSWORD_HASH_PREFIX = True
+def get_config(
+    config_file_path: Optional[str] = os.getenv("CONFIG_FILE"),
+) -> configparser.ConfigParser:
+    config = configparser.ConfigParser()
+    if config_file_path == None:
+        config_file_path = "/etc/mailiness.ini"
 
-PASSWORD_HASH_PREFIX = "{BLF-CRYPT}"
+    config_file_path = Path(config_file_path)
 
-DKIM_PRIVATE_KEY_DIRECTORY = "/var/lib/rspamd/dkim"
+    if not config_file_path.exists():
+        config_file_path.touch()
+        config = write_default_config(config, config_file_path)
+    else:
+        config.read(str(config_file_path))
+    return config
 
-DKIM_MAPS_PATH = "/etc/rspamd/dkim_selectors.map"
 
 # According to https://www.daemonology.net/blog/2009-06-11-cryptographic-right-answers.html
 RSA_PUBLIC_EXPONENT = 65537

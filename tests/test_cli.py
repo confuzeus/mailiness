@@ -2,11 +2,22 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import bcrypt
 
-from mailiness import cli, dkim, repo, settings
+from mailiness import g
+from . import utils
+
+test_config = utils.get_test_config()
+
+g.config = test_config
+g.debug = True
+from mailiness import cli, dkim, repo  # noqa
+
+mock_settings = MagicMock()
+mock_settings.get_config.return_value = test_config
 
 
 class CLITestCase(unittest.TestCase):
@@ -16,40 +27,33 @@ class CLITestCase(unittest.TestCase):
         cursor = db_conn.cursor()
         self.cursor = cursor
         cursor.execute(
-            f"CREATE TABLE {settings.DOMAINS_TABLE_NAME}(name TEXT NOT NULL UNIQUE)"
+            f"CREATE TABLE {test_config['db']['domains_table_name']}(name TEXT NOT NULL UNIQUE)"
         )
         cursor.execute(
-            f"CREATE TABLE {settings.USERS_TABLE_NAME}(domain_id INTEGER NOT NULL, email TEXT NOT NULL UNIQUE, password TEXT, quota INTEGER, FOREIGN KEY(domain_id) REFERENCES {settings.DOMAINS_TABLE_NAME}(rowid) ON DELETE CASCADE)"
+            f"CREATE TABLE {test_config['db']['users_table_name']}(domain_id INTEGER NOT NULL, email TEXT NOT NULL UNIQUE, password TEXT, quota INTEGER, FOREIGN KEY(domain_id) REFERENCES {test_config['db']['domains_table_name']}(rowid) ON DELETE CASCADE)"
         )
         cursor.execute(
-            f"CREATE TABLE {settings.ALIASES_TABLE_NAME}(domain_id INTEGER NOT NULL, from_address TEXT NOT NULL UNIQUE, to_address TEXT NOT NULL, FOREIGN KEY(domain_id) REFERENCES {settings.DOMAINS_TABLE_NAME}(rowid) ON DELETE CASCADE)"
+            f"CREATE TABLE {test_config['db']['aliases_table_name']}(domain_id INTEGER NOT NULL, from_address TEXT NOT NULL UNIQUE, to_address TEXT NOT NULL, FOREIGN KEY(domain_id) REFERENCES {test_config['db']['domains_table_name']}(rowid) ON DELETE CASCADE)"
         )
         db_conn.commit()
 
     def tearDown(self):
-        self.cursor.execute(f"DROP TABLE {settings.ALIASES_TABLE_NAME}")
-        self.cursor.execute(f"DROP TABLE {settings.USERS_TABLE_NAME}")
-        self.cursor.execute(f"DROP TABLE {settings.DOMAINS_TABLE_NAME}")
+        self.cursor.execute(f"DROP TABLE {test_config['db']['aliases_table_name']}")
+        self.cursor.execute(f"DROP TABLE {test_config['db']['users_table_name']}")
+        self.cursor.execute(f"DROP TABLE {test_config['db']['domains_table_name']}")
         self.db_conn.commit()
 
 
+@patch('mailiness.cli.settings', mock_settings)
 class DKIMInterfaceTest(unittest.TestCase):
     def test_save_dkim(self):
         domain_name = "smith.com"
         selector = "myselector"
         args = ["dkim", "keygen", "--save", "--quiet", domain_name, selector]
 
-        with patch("mailiness.dkim.settings") as mock_settings, patch(
-            "mailiness.dkim.shutil"
-        ), patch("mailiness.dkim.subprocess"):
-            _, dkim_maps_path = tempfile.mkstemp()
-            dkim_private_key_dir = tempfile.mkdtemp()
-
-            mock_settings.DKIM_MAPS_PATH = dkim_maps_path
-            mock_settings.DKIM_PRIVATE_KEY_DIRECTORY = dkim_private_key_dir
-
-            mock_settings.RSA_PUBLIC_EXPONENT = 65537
-            mock_settings.DKIM_KEY_SIZE = 512
+        with patch("mailiness.dkim.shutil"), patch("mailiness.dkim.subprocess"):
+            dkim_maps_path = test_config['spam']['dkim_maps_path']
+            dkim_private_key_dir = test_config['spam']['dkim_private_key_directory']
 
             cli.main(args)
 
@@ -61,6 +65,7 @@ class DKIMInterfaceTest(unittest.TestCase):
             self.assertTrue(pkey_file.exists())
 
 
+@patch('mailiness.cli.settings', mock_settings)
 class DomainInterfaceTest(CLITestCase):
     def setUp(self):
         super().setUp()
@@ -68,7 +73,9 @@ class DomainInterfaceTest(CLITestCase):
         self.domain_repo = repo.DomainRepository(conn=self.db_conn)
 
     def _get_domain_row(self):
-        return self.cursor.execute(f"SELECT * FROM {settings.DOMAINS_TABLE_NAME}")
+        return self.cursor.execute(
+            f"SELECT * FROM {test_config['db']['domains_table_name']}"
+        )
 
     def test_domain_add_adds_domain_to_db(self):
         args = ["domain", "add", self.domain_name]
@@ -90,20 +97,12 @@ class DomainInterfaceTest(CLITestCase):
 
         with patch(
             "mailiness.handlers.repo.DomainRepository"
-        ) as mock_repo_class, patch("mailiness.dkim.settings") as mock_settings, patch(
-            "mailiness.dkim.shutil"
-        ), patch(
+        ) as mock_repo_class, patch("mailiness.dkim.shutil"), patch(
             "mailiness.dkim.subprocess"
         ):
             mock_repo_class.return_value = self.domain_repo
-            _, dkim_maps_path = tempfile.mkstemp()
-            dkim_private_key_dir = tempfile.mkdtemp()
-
-            mock_settings.DKIM_MAPS_PATH = dkim_maps_path
-            mock_settings.DKIM_PRIVATE_KEY_DIRECTORY = dkim_private_key_dir
-
-            mock_settings.RSA_PUBLIC_EXPONENT = 65537
-            mock_settings.DKIM_KEY_SIZE = 512
+            dkim_maps_path = test_config["spam"]["dkim_maps_path"]
+            dkim_private_key_dir = test_config["spam"]["dkim_private_key_directory"]
 
             cli.main(args)
 
@@ -146,12 +145,9 @@ class DomainInterfaceTest(CLITestCase):
     def test_domain_delete_mailbox_removes_mailbox_from_disk(self):
         args = ["domain", "delete", self.domain_name, "--yes", "--mailbox"]
 
-        with patch(
-            "mailiness.handlers.repo.DomainRepository"
-        ) as mock_repo_class, patch("mailiness.handlers.settings") as mock_settings:
+        with patch("mailiness.handlers.repo.DomainRepository") as mock_repo_class:
             mock_repo_class.return_value = self.domain_repo
-            vmail_directory = tempfile.mkdtemp()
-            mock_settings.VMAIL_DIRECTORY = vmail_directory
+            vmail_directory = test_config["mail"]["vmail_directory"]
 
             mailbox_path = Path(vmail_directory) / self.domain_name
             mailbox_path.mkdir()
@@ -198,6 +194,7 @@ class DomainInterfaceTest(CLITestCase):
             self.assertNotIn(self.domain_name, dkim_map.keys())
 
 
+@patch('mailiness.cli.settings', mock_settings)
 class UserInterfaceTestCase(CLITestCase):
     def setUp(self):
         super().setUp()
@@ -248,13 +245,13 @@ class UserInterfaceTestCase(CLITestCase):
             cli.main(args)
 
             result = self.cursor.execute(
-                f"SELECT password FROM {settings.USERS_TABLE_NAME} WHERE email=?",
+                f"SELECT password FROM {test_config['db']['users_table_name']} WHERE email=?",
                 [email],
             )
 
             row = result.fetchone()
 
-            _, hashed_pw = row[0].split(settings.PASSWORD_HASH_PREFIX)
+            _, hashed_pw = row[0].split(test_config["users"]["password_hash_prefix"])
 
             self.assertTrue(
                 bcrypt.checkpw(password.encode("utf-8"), hashed_pw.encode("utf-8"))
@@ -305,11 +302,18 @@ class UserInterfaceTestCase(CLITestCase):
             cli.main(args)
 
             result = self.cursor.execute(
-                f"SELECT password FROM {settings.USERS_TABLE_NAME} WHERE email=?", [email]
+                f"SELECT password FROM {test_config['db']['users_table_name']} WHERE email=?",
+                [email],
             )
 
-            _, password_hash = result.fetchone()[0].split(settings.PASSWORD_HASH_PREFIX)
-            self.assertTrue(bcrypt.checkpw(new_password.encode('utf-8'), password_hash.encode('utf-8')))
+            _, password_hash = result.fetchone()[0].split(
+                test_config["users"]["password_hash_prefix"]
+            )
+            self.assertTrue(
+                bcrypt.checkpw(
+                    new_password.encode("utf-8"), password_hash.encode("utf-8")
+                )
+            )
 
 
 if __name__ == "__main__":

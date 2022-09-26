@@ -7,6 +7,11 @@ from unittest.mock import patch
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
+from . import utils
+from mailiness import g
+g.config = utils.get_test_config()
+g.debug = True
+
 from mailiness.dkim import DKIM
 
 

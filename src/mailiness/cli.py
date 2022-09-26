@@ -3,7 +3,7 @@ from typing import Optional, Sequence
 
 from mailiness import g
 
-from . import commands, dkim, handlers
+from . import commands, dkim, handlers, settings
 
 selector_timestamp = dkim.get_default_selector()
 
@@ -228,6 +228,7 @@ def main(args: Optional[Sequence] = None):
     args = parser.parse_args(args=args)
 
     g.debug = args.debug
+    g.config = settings.get_config()
 
     if args.version:
         commands.print_version()

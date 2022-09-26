@@ -4,10 +4,10 @@ from typing import Optional, Union
 import bcrypt
 from rich.table import Table
 
-from . import settings
+from mailiness import g
 
 
-def get_db_conn(dsn=settings.DB_CONNECTION_STRING):
+def get_db_conn(dsn=g.config["db"]["connection_string"]):
     return sqlite3.connect(dsn)
 
 
@@ -39,7 +39,7 @@ class DomainRepository(BaseRepository):
         If pretty is true, return a rich table representation.
         """
         result = self.cursor.execute(
-            "SELECT rowid, name FROM %s" % settings.DOMAINS_TABLE_NAME
+            "SELECT rowid, name FROM %s" % g.config["db"]["domains_table_name"]
         )
         self.data["rows"] = result.fetchall()
         return self._prettify_data() if pretty else self.data
@@ -51,7 +51,7 @@ class DomainRepository(BaseRepository):
         If pretty is true, return a rich table representation.
         """
         result = self.cursor.execute(
-            f"INSERT INTO {settings.DOMAINS_TABLE_NAME} VALUES(?) RETURNING rowid, name",
+            f"INSERT INTO {g.config['db']['domains_table_name']} VALUES(?) RETURNING rowid, name",
             [name],
         )
         self.data["rows"] = result.fetchall()
@@ -64,7 +64,7 @@ class DomainRepository(BaseRepository):
         """
         if what in ("name",):
             result = self.cursor.execute(
-                f"UPDATE {settings.DOMAINS_TABLE_NAME} SET {what}=? WHERE {what}=? RETURNING rowid, name",
+                f"UPDATE {g.config['db']['domains_table_name']} SET {what}=? WHERE {what}=? RETURNING rowid, name",
                 [new, old],
             )
         else:
@@ -78,7 +78,7 @@ class DomainRepository(BaseRepository):
         Delete a domain name.
         """
         self.cursor.execute(
-            f"DELETE FROM {settings.DOMAINS_TABLE_NAME} WHERE name=?", [name]
+            f"DELETE FROM {g.config['db']['domains_table_name']} WHERE name=?", [name]
         )
         self.db_conn.commit()
 
@@ -94,10 +94,10 @@ class UserRepository(BaseRepository):
 
         If domain is provided, filter the list to show this domain's users only.
         """
-        stmt = f"SELECT rowid, email, quota FROM {settings.USERS_TABLE_NAME}"
+        stmt = f"SELECT rowid, email, quota FROM {g.config['db']['users_table_name']}"
         if domain:
             result = self.cursor.execute(
-                f"SELECT rowid FROM {settings.DOMAINS_TABLE_NAME} WHERE name=?",
+                f"SELECT rowid FROM {g.config['db']['domains_table_name']} WHERE name=?",
                 [domain],
             )
             row = result.fetchone()
@@ -116,15 +116,16 @@ class UserRepository(BaseRepository):
 
         s = h.decode("utf-8")
 
-        if settings.INSERT_PASSWORD_HASH_PREFIX:
-            s = settings.PASSWORD_HASH_PREFIX + s
+        if g.config.getboolean("users", "insert_password_hash_prefix"):
+            s = g.config["users"]["password_hash_prefix"] + s
 
         return s
 
     def _get_domain_id_from_email(self, email: str) -> int:
         _, domain = email.split("@")
         result = self.cursor.execute(
-            f"SELECT rowid FROM {settings.DOMAINS_TABLE_NAME} WHERE name=?", [domain]
+            f"SELECT rowid FROM {g.config['db']['domains_table_name']} WHERE name=?",
+            [domain],
         )
         row = result.fetchone()
         if len(row) < 1:
@@ -152,7 +153,7 @@ class UserRepository(BaseRepository):
         domain_id = self._get_domain_id_from_email(email)
         quota_bytes = self._quota_gb_to_bytes(quota)
         result = self.cursor.execute(
-            f"INSERT INTO {settings.USERS_TABLE_NAME} VALUES (?,?,?,?) RETURNING rowid, email, quota",
+            f"INSERT INTO {g.config['db']['users_table_name']} VALUES (?,?,?,?) RETURNING rowid, email, quota",
             [domain_id, email, hashed_password, quota_bytes],
         )
         self.data["rows"] = result.fetchall()
@@ -167,7 +168,7 @@ class UserRepository(BaseRepository):
         password: Optional[str] = None,
         quota: Optional[int] = None,
     ):
-        stmt = f"UPDATE {settings.USERS_TABLE_NAME} SET %s WHERE email=?"
+        stmt = f"UPDATE {g.config['db']['users_table_name']} SET %s WHERE email=?"
         placeholders = []
         bindings = []
         if new_email:
@@ -193,7 +194,7 @@ class UserRepository(BaseRepository):
 
     def delete(self, email: str):
         self.cursor.execute(
-            f"DELETE FROM {settings.USERS_TABLE_NAME} WHERE email=?", [email]
+            f"DELETE FROM {g.config['db']['users_table_name']} WHERE email=?", [email]
         )
         self.db_conn.commit()
 
@@ -205,7 +206,8 @@ class AliasRepository(BaseRepository):
 
     def _get_domain_id(self, domain: str) -> int:
         result = self.cursor.execute(
-            f"SELECT rowid FROM {settings.DOMAINS_TABLE_NAME} WHERE name=?", [domain]
+            f"SELECT rowid FROM {g.config['db']['domains_table_name']} WHERE name=?",
+            [domain],
         )
         row = result.fetchone()
         if len(row) < 1:
@@ -223,9 +225,7 @@ class AliasRepository(BaseRepository):
 
         If domain is provided, filter the list to show only this domain's aliases.
         """
-        stmt = (
-            f"SELECT rowid, from_address, to_address FROM {settings.ALIASES_TABLE_NAME}"
-        )
+        stmt = f"SELECT rowid, from_address, to_address FROM {g.config['db']['aliases_table_name']}"
         if domain:
             domain_id = self._get_domain_id(domain)
             stmt += f" WHERE domain_id={domain_id}"
@@ -244,7 +244,7 @@ class AliasRepository(BaseRepository):
         domain_id = self._get_domain_id_from_email(from_address)
 
         result = self.cursor.execute(
-            f"INSERT INTO {settings.ALIASES_TABLE_NAME} VALUES (?,?,?) RETURNING rowid, from_address, to_address",
+            f"INSERT INTO {g.config['db']['aliases_table_name']} VALUES (?,?,?) RETURNING rowid, from_address, to_address",
             [domain_id, from_address, to_address],
         )
         self.data["rows"] = result.fetchall()
@@ -259,7 +259,7 @@ class AliasRepository(BaseRepository):
         to_address: Optional[str] = None,
         pretty=True,
     ) -> Union[dict, Table]:
-        stmt = f"UPDATE {settings.ALIASES_TABLE_NAME} SET %s WHERE from_address=? RETURNING rowid, from_address, to_address"
+        stmt = f"UPDATE {g.config['db']['aliases_table_name']} SET %s WHERE from_address=? RETURNING rowid, from_address, to_address"
         placeholders = []
         bindings = []
         if from_address:
@@ -280,7 +280,7 @@ class AliasRepository(BaseRepository):
 
     def delete(self, from_address: str):
         self.cursor.execute(
-            f"DELETE FROM {settings.ALIASES_TABLE_NAME} WHERE from_address=?",
+            f"DELETE FROM {g.config['db']['aliases_table_name']} WHERE from_address=?",
             [from_address],
         )
         self.db_conn.commit()

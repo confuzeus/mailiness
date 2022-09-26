@@ -1,11 +1,17 @@
 import sqlite3
 import unittest
 from unittest import TestCase
+from unittest.mock import patch
 
 import bcrypt
 from rich.table import Table
 
-from mailiness import settings
+from mailiness import g
+
+from . import utils
+
+test_config = utils.get_test_config()
+g.config = test_config
 from mailiness.repo import AliasRepository, DomainRepository, UserRepository
 
 
@@ -14,11 +20,13 @@ class DomainRepositoryTest(TestCase):
         db_conn = sqlite3.connect(":memory:")
         self.repo = DomainRepository(conn=db_conn)
         self.repo.cursor.execute(
-            f"CREATE TABLE {settings.DOMAINS_TABLE_NAME}(name TEXT)"
+            f"CREATE TABLE {test_config['db']['domains_table_name']}(name TEXT)"
         )
 
     def tearDown(self):
-        self.repo.cursor.execute(f"DROP TABLE {settings.DOMAINS_TABLE_NAME}")
+        self.repo.cursor.execute(
+            f"DROP TABLE {test_config['db']['domains_table_name']}"
+        )
 
     def test_index_returns_data_in_correct_format(self):
 
@@ -69,10 +77,10 @@ class UserRepositoryTest(TestCase):
         db_conn = sqlite3.connect(":memory:")
         self.repo = UserRepository(conn=db_conn)
         self.repo.cursor.execute(
-            f"CREATE TABLE {settings.DOMAINS_TABLE_NAME}(name TEXT)"
+            f"CREATE TABLE {test_config['db']['domains_table_name']}(name TEXT)"
         )
         self.repo.cursor.execute(
-            f"CREATE TABLE {settings.USERS_TABLE_NAME}(domain_id INTEGER, email TEXT, password TEXT, quota TEXT, FOREIGN KEY(domain_id) REFERENCES {settings.DOMAINS_TABLE_NAME}(rowid))"
+            f"CREATE TABLE {test_config['db']['users_table_name']}(domain_id INTEGER, email TEXT, password TEXT, quota TEXT, FOREIGN KEY(domain_id) REFERENCES {test_config['db']['domains_table_name']}(rowid))"
         )
         self.domain_repo = DomainRepository(conn=db_conn)
 
@@ -85,7 +93,7 @@ class UserRepositoryTest(TestCase):
 
             self.domain_repo.create(domain)
             self.repo.cursor.execute(
-                f"INSERT INTO {settings.USERS_TABLE_NAME} VALUES (?, ?, ?, ?)",
+                f"INSERT INTO {test_config['db']['users_table_name']} VALUES (?, ?, ?, ?)",
                 user_data,
             )
             self.repo.db_conn.commit()
@@ -111,10 +119,10 @@ class UserRepositoryTest(TestCase):
         self.assertIn("john@smith.com", data["rows"][0])
 
         result = self.repo.cursor.execute(
-            f"SELECT password FROM {settings.USERS_TABLE_NAME} WHERE email='john@smith.com'"
+            f"SELECT password FROM {test_config['db']['users_table_name']} WHERE email='john@smith.com'"
         )
         row = result.fetchone()
-        _, password_hash = row[0].split(settings.PASSWORD_HASH_PREFIX)
+        _, password_hash = row[0].split(test_config["users"]["password_hash_prefix"])
         self.assertNotEqual(password_hash, "secret")
         self.assertTrue(bcrypt.checkpw(b"secret", password_hash.encode("utf-8")))
 
@@ -126,17 +134,19 @@ class UserRepositoryTest(TestCase):
         self.repo.edit(target, password="password")
 
         result = self.repo.cursor.execute(
-            f"SELECT password FROM {settings.USERS_TABLE_NAME} WHERE email=?", [target]
+            f"SELECT password FROM {test_config['db']['users_table_name']} WHERE email=?",
+            [target],
         )
         row = result.fetchone()
-        _, password_hash = row[0].split(settings.PASSWORD_HASH_PREFIX)
+        _, password_hash = row[0].split(test_config["users"]["password_hash_prefix"])
         self.assertFalse(bcrypt.checkpw(b"secret", password_hash.encode("utf-8")))
         self.assertTrue(bcrypt.checkpw(b"password", password_hash.encode("utf-8")))
 
         self.repo.edit(target, quota=1)
 
         result = self.repo.cursor.execute(
-            f"SELECT quota FROM {settings.USERS_TABLE_NAME} WHERE email=?", [target]
+            f"SELECT quota FROM {test_config['db']['users_table_name']} WHERE email=?",
+            [target],
         )
         row = result.fetchone()
         self.assertEqual(int(row[0]), 1_000_000_000)
@@ -146,7 +156,8 @@ class UserRepositoryTest(TestCase):
         self.repo.edit(target, new_email=new_email)
 
         result = self.repo.cursor.execute(
-            f"SELECT email FROM {settings.USERS_TABLE_NAME} WHERE email=?", [new_email]
+            f"SELECT email FROM {test_config['db']['users_table_name']} WHERE email=?",
+            [new_email],
         )
         row = result.fetchone()
         self.assertEqual(len(row), 1)
@@ -169,10 +180,10 @@ class AliasRepositoryTest(TestCase):
         self.db_conn = db_conn
         self.repo = AliasRepository(conn=db_conn)
         self.repo.cursor.execute(
-            f"CREATE TABLE {settings.DOMAINS_TABLE_NAME}(name TEXT)"
+            f"CREATE TABLE {test_config['db']['domains_table_name']}(name TEXT)"
         )
         self.repo.cursor.execute(
-            f"CREATE TABLE {settings.ALIASES_TABLE_NAME}(domain_id INTEGER, from_address TEXT, to_address TEXT, FOREIGN KEY(domain_id) REFERENCES domains(rowid))"
+            f"CREATE TABLE {test_config['db']['aliases_table_name']}(domain_id INTEGER, from_address TEXT, to_address TEXT, FOREIGN KEY(domain_id) REFERENCES domains(rowid))"
         )
         self.domain_repo = DomainRepository(conn=db_conn)
         self.domain_name = "smith.com"
@@ -183,7 +194,7 @@ class AliasRepositoryTest(TestCase):
         from_address = "admin@smith.com"
         to_address = "john@doe.com"
         self.repo.cursor.execute(
-            f"INSERT INTO {settings.ALIASES_TABLE_NAME} VALUES (?, ?, ?)",
+            f"INSERT INTO {test_config['db']['aliases_table_name']} VALUES (?, ?, ?)",
             [
                 self.domain_id,
                 from_address,
@@ -199,7 +210,7 @@ class AliasRepositoryTest(TestCase):
         domain_id = domain_data["rows"][0][0]
 
         self.repo.cursor.execute(
-            f"INSERT INTO {settings.ALIASES_TABLE_NAME} VALUEs (?,?,?)",
+            f"INSERT INTO {test_config['db']['aliases_table_name']} VALUEs (?,?,?)",
             [
                 domain_id,
                 "john@gmail.com",

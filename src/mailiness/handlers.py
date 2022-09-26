@@ -7,13 +7,14 @@ from pathlib import Path
 
 from rich.console import Console
 
-from . import dkim, repo, settings
+from mailiness import g
+from . import dkim, repo
 
 console = Console()
 
 
 def handle_dkim_keygen(args: Namespace):
-    key = dkim.DKIM(domain=args.name, selector=args.selector)
+    key = dkim.DKIM(domain=args.domain, selector=args.selector)
 
     print(key.private_key_as_pem())
 
@@ -25,7 +26,7 @@ def handle_dkim_keygen(args: Namespace):
 
 
 def handle_dkim_show(args: Namespace):
-    key = dkim.DKIM(domain=args.name)
+    key = dkim.DKIM(domain=args.domain)
     print(key.private_key_as_pem())
     print(key.dns_txt_record())
 
@@ -72,7 +73,7 @@ def handle_domain_delete(args: Namespace):
             if args.debug:
                 vmail_directory = Path(tempfile.mkdtemp())
             else:
-                vmail_directory = Path(settings.VMAIL_DIRECTORY)
+                vmail_directory = Path(g.config['mail']['vmail_directory'])
 
             shutil.rmtree(vmail_directory / domain)
             print("Mailboxes deleted.")
@@ -142,7 +143,7 @@ def handle_user_delete(args: Namespace):
         if args.debug:
             vmail_directory = Path(tempfile.mkdtemp())
         else:
-            vmail_directory = Path(settings.VMAIL_DIRECTORY)
+            vmail_directory = Path(g.config['mail']['vmail_directory'])
 
         vmail_domain_directory = vmail_directory / domain
 
