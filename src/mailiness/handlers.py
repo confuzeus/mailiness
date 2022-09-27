@@ -71,11 +71,7 @@ def handle_domain_delete(args: Namespace):
             print("Private key deleted.")
 
         def _delete_mailbox_directory(domain):
-            if args.debug:
-                vmail_directory = Path(tempfile.mkdtemp())
-            else:
-                vmail_directory = Path(g.config["mail"]["vmail_directory"])
-
+            vmail_directory = Path(g.config["mail"]["vmail_directory"])
             shutil.rmtree(vmail_directory / domain)
             print("Mailboxes deleted.")
 

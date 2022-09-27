@@ -52,8 +52,8 @@ class DKIMInterfaceTest(unittest.TestCase):
         args = ["dkim", "keygen", "--save", "--quiet", domain_name, selector]
 
         with patch("mailiness.dkim.shutil"), patch("mailiness.dkim.subprocess"):
-            dkim_maps_path = test_config['spam']['dkim_maps_path']
-            dkim_private_key_dir = test_config['spam']['dkim_private_key_directory']
+            dkim_maps_path = g.config['spam']['dkim_maps_path']
+            dkim_private_key_dir = g.config['spam']['dkim_private_key_directory']
 
             cli.main(args)
 
@@ -101,8 +101,8 @@ class DomainInterfaceTest(CLITestCase):
             "mailiness.dkim.subprocess"
         ):
             mock_repo_class.return_value = self.domain_repo
-            dkim_maps_path = test_config["spam"]["dkim_maps_path"]
-            dkim_private_key_dir = test_config["spam"]["dkim_private_key_directory"]
+            dkim_maps_path = g.config["spam"]["dkim_maps_path"]
+            dkim_private_key_dir = g.config["spam"]["dkim_private_key_directory"]
 
             cli.main(args)
 
@@ -147,11 +147,10 @@ class DomainInterfaceTest(CLITestCase):
 
         with patch("mailiness.handlers.repo.DomainRepository") as mock_repo_class:
             mock_repo_class.return_value = self.domain_repo
-            vmail_directory = test_config["mail"]["vmail_directory"]
+            vmail_directory = g.config["mail"]["vmail_directory"]
 
             mailbox_path = Path(vmail_directory) / self.domain_name
             mailbox_path.mkdir()
-
             self.domain_repo.create(self.domain_name)
 
             cli.main(args)
