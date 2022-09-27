@@ -45,7 +45,7 @@ def get_config(
 
     if not config_file_path.exists():
         config_file_path.touch()
-        config = write_default_config(config, config_file_path)
+        config = write_default_config(config_file_path)
     else:
         config.read(str(config_file_path))
     return config

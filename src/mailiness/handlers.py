@@ -1,3 +1,4 @@
+import io
 import secrets
 import shutil
 import tempfile
@@ -73,7 +74,7 @@ def handle_domain_delete(args: Namespace):
             if args.debug:
                 vmail_directory = Path(tempfile.mkdtemp())
             else:
-                vmail_directory = Path(g.config['mail']['vmail_directory'])
+                vmail_directory = Path(g.config["mail"]["vmail_directory"])
 
             shutil.rmtree(vmail_directory / domain)
             print("Mailboxes deleted.")
@@ -143,7 +144,7 @@ def handle_user_delete(args: Namespace):
         if args.debug:
             vmail_directory = Path(tempfile.mkdtemp())
         else:
-            vmail_directory = Path(g.config['mail']['vmail_directory'])
+            vmail_directory = Path(g.config["mail"]["vmail_directory"])
 
         vmail_domain_directory = vmail_directory / domain
 
@@ -175,3 +176,11 @@ def handle_alias_edit(args: Namespace):
 def handle_alias_delete(args: Namespace):
     alias_repo = repo.AliasRepository()
     alias_repo.delete(args.from_address)
+
+
+def handle_config_show(args: Namespace):
+    dest = io.StringIO()
+    g.config.write(dest)
+    dest.seek(0)
+    print(dest.read())
+    dest.close()

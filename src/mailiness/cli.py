@@ -2,8 +2,10 @@ import argparse
 from typing import Optional, Sequence
 
 from mailiness import g
+from . import settings
+g.config = settings.get_config()
 
-from . import commands, dkim, handlers, settings
+from . import commands, dkim, handlers
 
 selector_timestamp = dkim.get_default_selector()
 
@@ -193,6 +195,16 @@ def add_alias_parser(parser):
     alias_delete.set_defaults(func=handlers.handle_alias_delete, func_args=True)
 
 
+def add_config_parser(parser):
+    config_parser = parser.add_parser("config", help="Configuration commands")
+    config_subparsers = config_parser.add_subparsers()
+
+    config_show = config_subparsers.add_parser(
+        "show", help="Show active configuration."
+    )
+    config_show.set_defaults(func=handlers.handle_config_show, func_args=True)
+
+
 def get_parser():
     parser = argparse.ArgumentParser(description="Manage your mail server.")
     parser.add_argument(
@@ -218,6 +230,8 @@ def get_parser():
 
     add_alias_parser(subparsers)
 
+    add_config_parser(subparsers)
+
     return parser
 
 
@@ -228,7 +242,6 @@ def main(args: Optional[Sequence] = None):
     args = parser.parse_args(args=args)
 
     g.debug = args.debug
-    g.config = settings.get_config()
 
     if args.version:
         commands.print_version()
