@@ -86,7 +86,16 @@ class DomainRepository(BaseRepository):
 class UserRepository(BaseRepository):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.data["headers"] = ("ID (Row id)", "Email", "Quota")
+        self.data["headers"] = ("ID (Row id)", "Email", "Quota (GB)")
+
+    def _set_data(self, rows: list[tuple]):
+
+        data = [list(row) for row in rows]
+
+        for row in data:
+            quota = int(row[2])
+            row[2] = quota / 1_000_000_000
+        self.data["rows"] = data
 
     def index(self, domain: Optional[str] = None, pretty=True) -> Union[dict, Table]:
         """
@@ -108,7 +117,7 @@ class UserRepository(BaseRepository):
 
         result = self.cursor.execute(stmt)
 
-        self.data["rows"] = result.fetchall()
+        self._set_data(result.fetchall())
         return self._prettify_data() if pretty else self.data
 
     def _hash_password(self, password: str) -> str:
@@ -156,7 +165,7 @@ class UserRepository(BaseRepository):
             f"INSERT INTO {g.config['db']['users_table_name']} VALUES (?,?,?,?) RETURNING rowid, email, quota",
             [domain_id, email, hashed_password, quota_bytes],
         )
-        self.data["rows"] = result.fetchall()
+        self._set_data(result.fetchall())
         self.db_conn.commit()
 
         return self._prettify_data() if pretty else self.data

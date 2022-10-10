@@ -113,7 +113,7 @@ class UserRepositoryTest(TestCase):
         self.domain_repo.create("smith.com")
 
         data = self.repo.create("john@smith.com", "secret", 2, pretty=False)
-        self.assertEqual(int(data["rows"][0][2]), 2_000_000_000)
+        self.assertEqual(int(data["rows"][0][2]), 2)
 
         data = self.repo.index(pretty=False)
         self.assertIn("john@smith.com", data["rows"][0])
