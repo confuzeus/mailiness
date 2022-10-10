@@ -33,6 +33,7 @@ dev = [
   "isort",
   "hatch",
   "pip-tools",
+  "coverage",
 ]
 
 [project.scripts]
