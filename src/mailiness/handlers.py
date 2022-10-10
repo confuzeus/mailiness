@@ -123,7 +123,7 @@ def handle_user_edit(args: Namespace):
 
 def handle_user_list(args: Namespace):
     user_repo = repo.UserRepository()
-    tbl = user_repo.index(domain=args.name)
+    tbl = user_repo.index(domain=args.domain)
     console.print(tbl)
 
 

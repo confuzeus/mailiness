@@ -1,3 +1,4 @@
+from io import StringIO
 import sqlite3
 import tempfile
 import unittest
@@ -313,6 +314,19 @@ class UserInterfaceTestCase(CLITestCase):
                     new_password.encode("utf-8"), password_hash.encode("utf-8")
                 )
             )
+
+    def test_user_list(self):
+        args = ['user', 'list']
+
+        self.user_repo.create("john@" + self.domain_name, 'password', 2)
+
+        with patch("mailiness.handlers.repo.UserRepository") as user_repo_class, patch('sys.stdout', new=StringIO()) as fake_stdout:
+
+            user_repo_class.return_value = self.user_repo
+
+            cli.main(args)
+
+            self.assertIn("john@" + self.domain_name, fake_stdout.getvalue())
 
 
 if __name__ == "__main__":
