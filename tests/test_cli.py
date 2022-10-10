@@ -45,28 +45,55 @@ class CLITestCase(unittest.TestCase):
         self.db_conn.commit()
 
 
-@patch('mailiness.cli.settings', mock_settings)
+@patch("mailiness.cli.settings", mock_settings)
 class DKIMInterfaceTest(unittest.TestCase):
+    def setUp(self):
+        self.domain_name = "smith.com"
+        self.selector = "myselector"
+
+    def test_dkim_keygen(self):
+
+        args = ["dkim", "keygen", "--quiet", self.domain_name, self.selector]
+
+        with patch("sys.stdout", new=StringIO()) as mock_stdout:
+
+            cli.main(args)
+
+            contents = mock_stdout.getvalue()
+
+            self.assertIn("BEGIN", contents)
+            self.assertNotIn(self.selector, contents)
+
+        args = ["dkim", "keygen", self.domain_name, self.selector]
+
+        with patch("sys.stdout", new=StringIO()) as mock_stdout:
+
+            cli.main(args)
+
+            contents = mock_stdout.getvalue()
+
+            self.assertIn(self.selector, contents)
+
     def test_save_dkim(self):
-        domain_name = "smith.com"
-        selector = "myselector"
-        args = ["dkim", "keygen", "--save", "--quiet", domain_name, selector]
+        args = ["dkim", "keygen", "--save", "--quiet", self.domain_name, self.selector]
 
         with patch("mailiness.dkim.shutil"), patch("mailiness.dkim.subprocess"):
-            dkim_maps_path = g.config['spam']['dkim_maps_path']
-            dkim_private_key_dir = g.config['spam']['dkim_private_key_directory']
+            dkim_maps_path = g.config["spam"]["dkim_maps_path"]
+            dkim_private_key_dir = g.config["spam"]["dkim_private_key_directory"]
 
             cli.main(args)
 
             with open(dkim_maps_path, "r", encoding="utf-8") as fp:
-                self.assertIn(domain_name, fp.read())
+                self.assertIn(self.domain_name, fp.read())
 
-            pkey_file = Path(dkim_private_key_dir) / f"{domain_name}.{selector}.key"
+            pkey_file = (
+                Path(dkim_private_key_dir) / f"{self.domain_name}.{self.selector}.key"
+            )
 
             self.assertTrue(pkey_file.exists())
 
 
-@patch('mailiness.cli.settings', mock_settings)
+@patch("mailiness.cli.settings", mock_settings)
 class DomainInterfaceTest(CLITestCase):
     def setUp(self):
         super().setUp()
@@ -194,7 +221,7 @@ class DomainInterfaceTest(CLITestCase):
             self.assertNotIn(self.domain_name, dkim_map.keys())
 
 
-@patch('mailiness.cli.settings', mock_settings)
+@patch("mailiness.cli.settings", mock_settings)
 class UserInterfaceTestCase(CLITestCase):
     def setUp(self):
         super().setUp()
@@ -316,11 +343,13 @@ class UserInterfaceTestCase(CLITestCase):
             )
 
     def test_user_list(self):
-        args = ['user', 'list']
+        args = ["user", "list"]
 
-        self.user_repo.create("john@" + self.domain_name, 'password', 2)
+        self.user_repo.create("john@" + self.domain_name, "password", 2)
 
-        with patch("mailiness.handlers.repo.UserRepository") as user_repo_class, patch('sys.stdout', new=StringIO()) as fake_stdout:
+        with patch("mailiness.handlers.repo.UserRepository") as user_repo_class, patch(
+            "sys.stdout", new=StringIO()
+        ) as fake_stdout:
 
             user_repo_class.return_value = self.user_repo
 
