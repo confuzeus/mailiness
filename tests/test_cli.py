@@ -77,7 +77,9 @@ class DKIMInterfaceTest(unittest.TestCase):
     def test_save_dkim(self):
         args = ["dkim", "keygen", "--save", "--quiet", self.domain_name, self.selector]
 
-        with patch("mailiness.dkim.shutil"), patch("mailiness.dkim.subprocess"):
+        with patch("mailiness.dkim.shutil"), patch(
+            "mailiness.dkim.subprocess"
+        ), patch("mailiness.dkim.g.config", new=test_config):
             dkim_maps_path = g.config["spam"]["dkim_maps_path"]
             dkim_private_key_dir = g.config["spam"]["dkim_private_key_directory"]
 
@@ -91,6 +93,27 @@ class DKIMInterfaceTest(unittest.TestCase):
             )
 
             self.assertTrue(pkey_file.exists())
+
+    def test_dkim_show(self):
+        args = ["dkim", "keygen", "--save", "--quiet", self.domain_name, self.selector]
+
+        with patch("mailiness.dkim.shutil"), patch("mailiness.dkim.subprocess"), patch(
+            "sys.stdout", new=StringIO()
+        ) as mock_stdout, patch("mailiness.dkim.g.config", new=test_config):
+
+            cli.main(args)
+
+        with patch(
+            "sys.stdout", new=StringIO()
+        ) as mock_stdout, patch("mailiness.dkim.g.config", new=test_config):
+
+            args = ["dkim", "show", self.domain_name]
+
+            cli.main(args)
+
+            contents = mock_stdout.getvalue()
+            self.assertIn("BEGIN", contents)
+            self.assertIn(self.selector, contents)
 
 
 @patch("mailiness.cli.settings", mock_settings)
