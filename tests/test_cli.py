@@ -77,9 +77,9 @@ class DKIMInterfaceTest(unittest.TestCase):
     def test_save_dkim(self):
         args = ["dkim", "keygen", "--save", "--quiet", self.domain_name, self.selector]
 
-        with patch("mailiness.dkim.shutil"), patch(
-            "mailiness.dkim.subprocess"
-        ), patch("mailiness.dkim.g.config", new=test_config):
+        with patch("mailiness.dkim.shutil"), patch("mailiness.dkim.subprocess"), patch(
+            "mailiness.dkim.g.config", new=test_config
+        ):
             dkim_maps_path = g.config["spam"]["dkim_maps_path"]
             dkim_private_key_dir = g.config["spam"]["dkim_private_key_directory"]
 
@@ -103,9 +103,9 @@ class DKIMInterfaceTest(unittest.TestCase):
 
             cli.main(args)
 
-        with patch(
-            "sys.stdout", new=StringIO()
-        ) as mock_stdout, patch("mailiness.dkim.g.config", new=test_config):
+        with patch("sys.stdout", new=StringIO()) as mock_stdout, patch(
+            "mailiness.dkim.g.config", new=test_config
+        ):
 
             args = ["dkim", "show", self.domain_name]
 
@@ -242,6 +242,27 @@ class DomainInterfaceTest(CLITestCase):
 
             dkim_map = key.load_from_dkim_map_file()
             self.assertNotIn(self.domain_name, dkim_map.keys())
+
+    def test_domain_list(self):
+        args = ["domain", "add", self.domain_name]
+
+        with patch("mailiness.handlers.repo.DomainRepository") as mock_repo_class:
+
+            mock_repo_class.return_value = self.domain_repo
+
+            cli.main(args)
+
+        with patch(
+            "mailiness.handlers.repo.DomainRepository"
+        ) as mock_repo_class, patch("sys.stdout", new=StringIO()) as mock_stdout:
+
+            mock_repo_class.return_value = self.domain_repo
+
+            args = ["domain", "list"]
+
+            cli.main(args)
+
+            self.assertIn(self.domain_name, mock_stdout.getvalue())
 
 
 @patch("mailiness.cli.settings", mock_settings)
