@@ -137,10 +137,7 @@ def handle_user_delete(args: Namespace):
 
         user, domain = args.email.split("@")
 
-        if args.debug:
-            vmail_directory = Path(tempfile.mkdtemp())
-        else:
-            vmail_directory = Path(g.config["mail"]["vmail_directory"])
+        vmail_directory = Path(g.config["mail"]["vmail_directory"])
 
         vmail_domain_directory = vmail_directory / domain
 
