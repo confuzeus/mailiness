@@ -251,7 +251,6 @@ class AliasRepository(BaseRepository):
         Create a new alias pointing from from_address to to_address.
         """
         domain_id = self._get_domain_id_from_email(from_address)
-
         result = self.cursor.execute(
             f"INSERT INTO {g.config['db']['aliases_table_name']} VALUES (?,?,?) RETURNING rowid, from_address, to_address",
             [domain_id, from_address, to_address],
@@ -271,7 +270,7 @@ class AliasRepository(BaseRepository):
         stmt = f"UPDATE {g.config['db']['aliases_table_name']} SET %s WHERE from_address=? RETURNING rowid, from_address, to_address"
         placeholders = []
         bindings = []
-        if from_address:
+        if new_from:
             placeholders.append("from_address=?")
             bindings.append(new_from)
 
