@@ -448,5 +448,28 @@ class UserInterfaceTestCase(CLITestCase):
             self.assertFalse(vmail_user_directory.exists())
 
 
+@patch("mailiness.cli.settings", mock_settings)
+class AliasInterfaceTest(CLITestCase):
+    def setUp(self):
+        super().setUp()
+        self.domain_name = "smith.com"
+        self.domain_repo = repo.DomainRepository(conn=self.db_conn)
+        self.domain_repo.create(self.domain_name)
+        self.user_repo = repo.UserRepository(conn=self.db_conn)
+        self.from_address = "john@" + self.domain_name
+        self.user_repo.create(self.from_address, "secret", 2, pretty=False)
+        self.alias_repo = repo.AliasRepository(conn=self.db_conn)
+
+    def test_alias_add(self):
+        with patch(
+            "mailiness.handlers.repo.AliasRepository", return_value=self.alias_repo
+        ), patch("sys.stdout", StringIO()) as mock_stdout:
+            args = ["alias", "add", self.from_address, "joe@west.com"]
+
+            cli.main(args)
+
+            self.assertIn("joe@west.com", mock_stdout.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()
