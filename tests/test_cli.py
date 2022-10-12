@@ -401,6 +401,52 @@ class UserInterfaceTestCase(CLITestCase):
 
             self.assertIn("john@" + self.domain_name, fake_stdout.getvalue())
 
+    def test_user_delete(self):
+        email = "john@" + self.domain_name
+        password = "secret"
+        quota = 2
+
+        with patch("mailiness.handlers.repo.UserRepository") as user_repo_class:
+
+            user_repo_class.return_value = self.user_repo
+            data = self.user_repo.create(email, password, quota, pretty=False)
+            self.assertIn(email, data["rows"][0])
+
+            args = ["user", "delete", email]
+
+            cli.main(args)
+
+            data = self.user_repo.index(pretty=False)
+            self.assertEqual(len(data["rows"]), 0)
+
+    def test_user_delete_mail_directory(self):
+        email = "john@" + self.domain_name
+        password = "secret"
+        quota = 2
+
+        with patch("mailiness.handlers.repo.UserRepository") as user_repo_class, patch(
+            "mailiness.handlers.g.config", new=test_config
+        ):
+
+            user_repo_class.return_value = self.user_repo
+            self.user_repo.create(email, password, quota, pretty=False)
+
+            vmail_domain_directory = (
+                Path(test_config["mail"]["vmail_directory"]) / self.domain_name
+            )
+
+            vmail_domain_directory.mkdir()
+
+            vmail_user_directory = vmail_domain_directory / "john"
+
+            vmail_user_directory.mkdir()
+
+            args = ["user", "delete", email, "--mail"]
+
+            cli.main(args)
+
+            self.assertFalse(vmail_user_directory.exists())
+
 
 if __name__ == "__main__":
     unittest.main()
