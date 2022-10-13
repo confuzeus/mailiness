@@ -271,8 +271,8 @@ class AliasRepository(BaseRepository):
         placeholders = []
         bindings = []
         if new_from:
-            _, old_domain = from_address.split('@')
-            _, new_domain = from_address.split('@')
+            _, old_domain = from_address.split("@")
+            _, new_domain = from_address.split("@")
             if old_domain != new_domain:
                 domain_id = self._get_domain_id_from_email(new_from)
                 placeholders.append("domain_id=?")

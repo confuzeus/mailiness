@@ -1,7 +1,8 @@
+import configparser
+import os
 from pathlib import Path
 from typing import Optional
-import os
-import configparser
+
 
 def get_default_config() -> configparser.ConfigParser:
     config = configparser.ConfigParser()
@@ -25,9 +26,7 @@ def get_default_config() -> configparser.ConfigParser:
     return config
 
 
-def write_default_config(
-    path: Path
-) -> configparser.ConfigParser:
+def write_default_config(path: Path) -> configparser.ConfigParser:
     config = get_default_config()
     with path.open("w", encoding="utf-8") as fp:
         config.write(fp)
@@ -38,7 +37,7 @@ def get_config(
     config_file_path: Optional[str] = os.getenv("CONFIG_FILE"),
 ) -> configparser.ConfigParser:
     config = configparser.ConfigParser()
-    if config_file_path == None:
+    if config_file_path is None:
         config_file_path = "/etc/mailiness.ini"
 
     config_file_path = Path(config_file_path)

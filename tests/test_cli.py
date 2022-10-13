@@ -1,14 +1,14 @@
-from io import StringIO
 import sqlite3
 import tempfile
 import unittest
+from io import StringIO
 from pathlib import Path
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import bcrypt
 
 from mailiness import g
+
 from . import utils
 
 test_config = utils.get_test_config()
@@ -485,50 +485,55 @@ class AliasInterfaceTest(CLITestCase):
             self.assertIn("kanye@west.com", aliases["rows"][0])
 
     def test_alias_edit_from_address_same_domain(self):
-        with patch("mailiness.handlers.repo.AliasRepository", return_value=self.alias_repo):
+        with patch(
+            "mailiness.handlers.repo.AliasRepository", return_value=self.alias_repo
+        ):
             self.alias_repo.create(self.from_address, "joe@west.com")
-            new_from = 'jane@' + self.domain_name
-            self.user_repo.create(new_from, 'secret', 2)
+            new_from = "jane@" + self.domain_name
+            self.user_repo.create(new_from, "secret", 2)
 
-            args = ['alias', 'edit', self.from_address, '--new-from', new_from]
+            args = ["alias", "edit", self.from_address, "--new-from", new_from]
 
             cli.main(args)
 
             aliases = self.alias_repo.index(pretty=False)
 
-            self.assertIn(new_from, aliases['rows'][0])
+            self.assertIn(new_from, aliases["rows"][0])
 
     def test_alias_edit_from_address_different_domain(self):
-        with patch("mailiness.handlers.repo.AliasRepository", return_value=self.alias_repo):
+        with patch(
+            "mailiness.handlers.repo.AliasRepository", return_value=self.alias_repo
+        ):
             self.alias_repo.create(self.from_address, "joe@west.com")
             self.domain_repo.create("doe.com")
-            self.user_repo.create('john@doe.com', 'secret', 2)
+            self.user_repo.create("john@doe.com", "secret", 2)
 
-            args = ['alias', 'edit', self.from_address, '--new-from', 'john@doe.com']
+            args = ["alias", "edit", self.from_address, "--new-from", "john@doe.com"]
 
             cli.main(args)
 
             aliases = self.alias_repo.index(pretty=False)
 
-            self.assertIn('john@doe.com', aliases['rows'][0])
+            self.assertIn("john@doe.com", aliases["rows"][0])
 
     def test_alias_delete(self):
-        with patch("mailiness.handlers.repo.AliasRepository", return_value=self.alias_repo):
+        with patch(
+            "mailiness.handlers.repo.AliasRepository", return_value=self.alias_repo
+        ):
             to_addr = "joe@gmail.org"
             self.alias_repo.create(self.from_address, to_addr)
 
             aliases = self.alias_repo.index(pretty=False)
 
-            self.assertIn(to_addr, aliases['rows'][0])
+            self.assertIn(to_addr, aliases["rows"][0])
 
-            args = ['alias', 'delete', self.from_address]
+            args = ["alias", "delete", self.from_address]
 
             cli.main(args)
 
             aliases = self.alias_repo.index(pretty=False)
 
-            self.assertEqual(len(aliases['rows']), 0)
-
+            self.assertEqual(len(aliases["rows"]), 0)
 
 
 if __name__ == "__main__":

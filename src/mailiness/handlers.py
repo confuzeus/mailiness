@@ -1,7 +1,6 @@
 import io
 import secrets
 import shutil
-import tempfile
 from argparse import Namespace
 from getpass import getpass
 from pathlib import Path
@@ -9,6 +8,7 @@ from pathlib import Path
 from rich.console import Console
 
 from mailiness import g
+
 from . import dkim, repo
 
 console = Console()

@@ -7,12 +7,14 @@ from unittest.mock import patch
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 
-from . import utils
 from mailiness import g
+
+from . import utils
+
 g.config = utils.get_test_config()
 g.debug = True
 
-from mailiness.dkim import DKIM
+from mailiness.dkim import DKIM  # noqa: E402
 
 
 class DKIMTest(TestCase):

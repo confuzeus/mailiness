@@ -8,9 +8,9 @@ from typing import Optional
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from . import settings
-
 from mailiness import g
+
+from . import settings
 
 debug = getattr(g, "debug", False)
 
@@ -28,8 +28,7 @@ class DKIM:
         if domain in dkim_map.keys():
             self.selector = dkim_map[domain]
             with (
-                Path(self.dkim_private_key_dir)
-                / Path(f"{domain}.{self.selector}.key")
+                Path(self.dkim_private_key_dir) / Path(f"{domain}.{self.selector}.key")
             ).open("rb") as fp:
                 self.private_key = serialization.load_pem_private_key(
                     fp.read(), password=None

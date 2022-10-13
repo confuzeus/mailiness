@@ -2,10 +2,12 @@ import argparse
 from typing import Optional, Sequence
 
 from mailiness import g
+
 from . import settings
+
 g.config = settings.get_config()
 
-from . import commands, dkim, handlers
+from . import commands, dkim, handlers  # noqa: E402
 
 selector_timestamp = dkim.get_default_selector()
 

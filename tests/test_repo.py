@@ -1,7 +1,6 @@
 import sqlite3
 import unittest
 from unittest import TestCase
-from unittest.mock import patch
 
 import bcrypt
 from rich.table import Table
@@ -12,7 +11,11 @@ from . import utils
 
 test_config = utils.get_test_config()
 g.config = test_config
-from mailiness.repo import AliasRepository, DomainRepository, UserRepository
+from mailiness.repo import (  # noqa: E402
+    AliasRepository,
+    DomainRepository,
+    UserRepository,
+)
 
 
 class DomainRepositoryTest(TestCase):
