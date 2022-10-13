@@ -42,6 +42,7 @@ To view help for subcommands, simply add *-h* at the end.
    server-assumptions
    commands
    configuration
+   development
 
 
 
