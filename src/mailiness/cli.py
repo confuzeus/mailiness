@@ -180,7 +180,7 @@ def add_alias_parser(parser):
         "list", help="List all addresses pointing to this address."
     )
     alias_list.add_argument(
-        "to_address", help="The address other addresses are pointing to."
+        "--domain", "-d", type=str, help="Show aliases from this domain only."
     )
     alias_list.set_defaults(func=handlers.handle_alias_list, func_args=True)
 

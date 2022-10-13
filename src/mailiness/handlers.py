@@ -156,7 +156,7 @@ def handle_alias_add(args: Namespace):
 
 def handle_alias_list(args: Namespace):
     alias_repo = repo.AliasRepository()
-    tbl = alias_repo.index(args.to_address)
+    tbl = alias_repo.index(args.domain)
     console.print(tbl)
 
 
