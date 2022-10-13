@@ -535,6 +535,36 @@ class AliasInterfaceTest(CLITestCase):
 
             self.assertEqual(len(aliases["rows"]), 0)
 
+    def test_alias_list(self):
+        with patch(
+            "mailiness.handlers.repo.AliasRepository", return_value=self.alias_repo
+        ), patch("sys.stdout", StringIO()) as mock_stdout:
+            to_addr = "joe@gmail.org"
+            self.alias_repo.create(self.from_address, to_addr)
+
+            args = ["alias", "list"]
+
+            cli.main(args)
+
+            self.assertIn(self.from_address, mock_stdout.getvalue())
+
+    def test_alias_list_with_domain(self):
+        domain = "doe.com"
+        self.domain_repo.create(domain)
+        self.alias_repo.create(self.from_address, "joe@gmail.net")
+        self.alias_repo.create("jane@" + domain, "joe@gmail.net")
+
+        args = ["alias", "list", "--domain", domain]
+
+        with patch(
+            "mailiness.handlers.repo.AliasRepository", return_value=self.alias_repo
+        ), patch("sys.stdout", StringIO()) as mock_stdout:
+            cli.main(args)
+
+            contents = mock_stdout.getvalue()
+            self.assertIn("jane@" + domain, contents)
+            self.assertNotIn(self.from_address, contents)
+
 
 if __name__ == "__main__":
     unittest.main()
