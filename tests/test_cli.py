@@ -512,6 +512,24 @@ class AliasInterfaceTest(CLITestCase):
 
             self.assertIn('john@doe.com', aliases['rows'][0])
 
+    def test_alias_delete(self):
+        with patch("mailiness.handlers.repo.AliasRepository", return_value=self.alias_repo):
+            to_addr = "joe@gmail.org"
+            self.alias_repo.create(self.from_address, to_addr)
+
+            aliases = self.alias_repo.index(pretty=False)
+
+            self.assertIn(to_addr, aliases['rows'][0])
+
+            args = ['alias', 'delete', self.from_address]
+
+            cli.main(args)
+
+            aliases = self.alias_repo.index(pretty=False)
+
+            self.assertEqual(len(aliases['rows']), 0)
+
+
 
 if __name__ == "__main__":
     unittest.main()
