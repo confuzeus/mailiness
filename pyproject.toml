@@ -7,7 +7,7 @@ name = "mailiness"
 dynamic = ["version"]
 description = "Manage your mail server at the command line."
 readme = "README.md"
-requires-python = "<3.10"
+requires-python = ">=3.9"
 license = "MIT"
 authors = [
   {name="Michael Karamuth", email="michael@confuzeus.com"}
